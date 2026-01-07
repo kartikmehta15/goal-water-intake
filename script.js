@@ -1,6 +1,15 @@
 // Water Intake Tracker Application
 class WaterIntakeTracker {
     constructor() {
+        // Check authentication first
+        if (!AuthSystem.requireAuth()) {
+            return; // Will redirect to auth page
+        }
+
+        // Get current user
+        this.currentUser = AuthSystem.getCurrentUser();
+        this.userEmail = this.currentUser.email;
+
         this.currentDate = new Date();
         this.selectedDate = new Date();
         this.defaultGoal = 2000;
@@ -42,12 +51,25 @@ class WaterIntakeTracker {
     }
 
     init() {
+        this.setupUserProfile();
         this.setupEventListeners();
         this.updateDateSelector();
         this.updateDisplay();
         this.renderCalendar();
         this.updateStatistics();
         this.initializeExportDates();
+    }
+
+    setupUserProfile() {
+        // Display user email
+        document.getElementById('user-email').textContent = this.userEmail;
+
+        // Setup logout button
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            if (confirm('Are you sure you want to logout?')) {
+                AuthSystem.logout();
+            }
+        });
     }
 
     setupEventListeners() {
@@ -105,12 +127,16 @@ class WaterIntakeTracker {
     }
 
     loadData() {
-        const savedData = localStorage.getItem('waterIntakeData');
+        // User-specific data storage
+        const dataKey = `waterIntakeData_${this.userEmail}`;
+        const savedData = localStorage.getItem(dataKey);
         return savedData ? JSON.parse(savedData) : {};
     }
 
     saveData() {
-        localStorage.setItem('waterIntakeData', JSON.stringify(this.data));
+        // User-specific data storage
+        const dataKey = `waterIntakeData_${this.userEmail}`;
+        localStorage.setItem(dataKey, JSON.stringify(this.data));
     }
 
     saveIntake() {

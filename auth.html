@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Water Intake Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>💧 Water Intake Tracker</h1>
+                <p class="tagline">Stay hydrated, stay healthy!</p>
+            </div>
+
+            <!-- Sign In Form -->
+            <div id="signin-form" class="auth-form active">
+                <h2>Sign In</h2>
+                <form id="signin-form-element">
+                    <div class="form-group">
+                        <label for="signin-email">Email</label>
+                        <input type="email" id="signin-email" required placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="signin-password">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="signin-password" required placeholder="Enter your password">
+                            <button type="button" class="toggle-password" data-target="signin-password">
+                                👁️
+                            </button>
+                        </div>
+                    </div>
+                    <div class="error-message" id="signin-error"></div>
+                    <button type="submit" class="btn-primary auth-btn">Sign In</button>
+                    <div class="forgot-password">
+                        <a href="#" id="forgot-password-link">Forgot Password?</a>
+                    </div>
+                </form>
+                <div class="auth-toggle">
+                    <p>Don't have an account? <a href="#" id="show-signup">Sign Up</a></p>
+                </div>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="signup-form" class="auth-form">
+                <h2>Sign Up</h2>
+                <form id="signup-form-element">
+                    <div class="form-group">
+                        <label for="signup-email">Email</label>
+                        <input type="email" id="signup-email" required placeholder="Enter your email">
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="signup-password" required placeholder="At least 6 characters">
+                            <button type="button" class="toggle-password" data-target="signup-password">
+                                👁️
+                            </button>
+                        </div>
+                        <div class="password-strength" id="password-strength"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-confirm-password">Confirm Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="signup-confirm-password" required placeholder="Re-enter your password">
+                            <button type="button" class="toggle-password" data-target="signup-confirm-password">
+                                👁️
+                            </button>
+                        </div>
+                    </div>
+                    <div class="error-message" id="signup-error"></div>
+                    <button type="submit" class="btn-primary auth-btn">Sign Up</button>
+                </form>
+                <div class="auth-toggle">
+                    <p>Already have an account? <a href="#" id="show-signin">Sign In</a></p>
+                </div>
+            </div>
+
+            <div class="auth-note">
+                <p><strong>Note:</strong> This is a demo authentication system using browser localStorage. For production applications, use proper backend authentication with secure password hashing and storage.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+</body>
+</html>
