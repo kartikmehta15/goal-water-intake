@@ -385,6 +385,58 @@ input[type="number"]:focus {
     color: var(--text-light);
 }
 
+/* Export Section */
+.export-section {
+    grid-column: 1 / -1;
+}
+
+.export-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.date-range {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.date-input-group label {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.date-input-group input[type="date"] {
+    padding: 10px 12px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.date-input-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.export-controls .btn-primary {
+    align-self: flex-start;
+}
+
+.success-feedback {
+    background: var(--success) !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     header h1 {
@@ -401,5 +453,17 @@ input[type="number"]:focus {
 
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .date-range {
+        flex-direction: column;
+    }
+
+    .date-input-group {
+        width: 100%;
+    }
+
+    .export-controls .btn-primary {
+        width: 100%;
     }
 }
