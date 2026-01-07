@@ -6,12 +6,6 @@
       "**/.*",
       "**/node_modules/**",
       "README.md"
-    ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/auth.html"
-      }
     ]
   },
   "firestore": {

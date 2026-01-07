@@ -102,27 +102,42 @@ class WaterIntakeTracker {
         const localData = localStorage.getItem(localStorageKey);
         
         if (localData) {
-            const shouldMigrate = confirm(
-                'We found existing data on this device. Would you like to sync it to the cloud? ' +
-                'This will merge it with any existing cloud data.'
-            );
-            
-            if (shouldMigrate) {
-                try {
-                    this.showLoading('Migrating data to cloud...');
-                    const dataToMigrate = JSON.parse(localData);
-                    await this.migrateToFirestore(dataToMigrate);
+            try {
+                const dataToMigrate = JSON.parse(localData);
+                const entryCount = Object.keys(dataToMigrate).length;
+                
+                if (entryCount > 0) {
+                    const shouldMigrate = confirm(
+                        `Welcome! We found ${entryCount} day(s) of water intake data on this device.\n\n` +
+                        'Would you like to sync this data to the cloud?\n\n' +
+                        '• This will merge with any existing cloud data\n' +
+                        '• Your data will be accessible from all your devices\n' +
+                        '• Local data will be removed after successful sync\n\n' +
+                        'Click OK to sync, or Cancel to start fresh.'
+                    );
                     
-                    // Clear localStorage after successful migration
-                    localStorage.removeItem(localStorageKey);
-                    
-                    this.hideLoading();
-                    alert('Data successfully migrated to cloud!');
-                } catch (error) {
-                    this.hideLoading();
-                    console.error('Migration error:', error);
-                    alert('Failed to migrate data. Your local data is safe and will remain on this device.');
+                    if (shouldMigrate) {
+                        try {
+                            this.showLoading('Migrating data to cloud...');
+                            await this.migrateToFirestore(dataToMigrate);
+                            
+                            // Clear localStorage after successful migration
+                            localStorage.removeItem(localStorageKey);
+                            
+                            this.hideLoading();
+                            this.showSuccess(`Successfully migrated ${entryCount} day(s) of data to cloud!`);
+                        } catch (error) {
+                            this.hideLoading();
+                            console.error('Migration error:', error);
+                            this.showError('Failed to migrate data. Your local data is safe and will remain on this device.');
+                        }
+                    } else {
+                        // User chose not to migrate - keep localStorage data in case they change their mind
+                        this.showInfo('You can export your local data using the Export feature if needed.');
+                    }
                 }
+            } catch (error) {
+                console.error('Error checking localStorage data:', error);
             }
         }
     }
@@ -213,8 +228,51 @@ class WaterIntakeTracker {
     }
 
     showError(message) {
-        // Simple error display - you can enhance this
-        alert(message);
+        this.showToast('error', 'Error', message);
+    }
+
+    showSuccess(message) {
+        this.showToast('success', 'Success', message);
+    }
+
+    showInfo(message) {
+        this.showToast('info', 'Info', message);
+    }
+
+    showToast(type, title, message) {
+        const toast = document.getElementById('toast-notification');
+        const icon = document.getElementById('toast-icon');
+        const titleEl = document.getElementById('toast-title');
+        const messageEl = document.getElementById('toast-message');
+        const closeBtn = document.getElementById('toast-close');
+
+        // Set icon based on type
+        const icons = {
+            error: '❌',
+            success: '✅',
+            info: 'ℹ️'
+        };
+        icon.textContent = icons[type] || 'ℹ️';
+
+        // Set content
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        // Set type class
+        toast.className = 'toast-notification show ' + type;
+
+        // Auto-hide after 5 seconds
+        const hideTimeout = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 5000);
+
+        // Close button handler
+        const closeHandler = () => {
+            clearTimeout(hideTimeout);
+            toast.classList.remove('show');
+            closeBtn.removeEventListener('click', closeHandler);
+        };
+        closeBtn.addEventListener('click', closeHandler);
     }
 
     setupEventListeners() {
