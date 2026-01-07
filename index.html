@@ -6,6 +6,11 @@
     <title>Water Intake Tracker</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="auth.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
     <div class="container">
@@ -115,6 +120,18 @@
                 </div>
             </section>
         </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Syncing data...</p>
+    </div>
+
+    <!-- Offline Message -->
+    <div class="offline-message" id="offline-message">
+        <span class="offline-icon">📡</span>
+        <span>You are offline. Changes will sync when you're back online.</span>
     </div>
 
     <script src="auth.js"></script>
