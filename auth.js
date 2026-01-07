@@ -1,14 +1,26 @@
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
 // Firebase Configuration
-// IMPORTANT: Replace these with your actual Firebase project credentials
-// Get these from Firebase Console > Project Settings > General > Your apps
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY_HERE",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAQvSXT3pB0mNB2fsLva_GHGilKVLeGQSU",
+  authDomain: "water-intake-tracker-6d9c1.firebaseapp.com",
+  projectId: "water-intake-tracker-6d9c1",
+  storageBucket: "water-intake-tracker-6d9c1.firebasestorage.app",
+  messagingSenderId: "493478307594",
+  appId: "1:493478307594:web:7c50471cd8d3f2f620bcf3",
+  measurementId: "G-589YE5KW60"
 };
+
 
 // Initialize Firebase
 let firebaseApp = null;
