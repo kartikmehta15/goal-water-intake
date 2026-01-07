@@ -5,12 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Water Intake Tracker</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth.css">
 </head>
 <body>
     <div class="container">
         <header>
             <h1>💧 Water Intake Tracker</h1>
             <p class="tagline">Stay hydrated, stay healthy!</p>
+            <!-- User Profile Section -->
+            <div class="user-profile" id="user-profile">
+                <div class="user-info">
+                    <span class="user-icon">👤</span>
+                    <span class="user-email" id="user-email"></span>
+                </div>
+                <button class="logout-btn" id="logout-btn">Logout</button>
+            </div>
         </header>
 
         <div class="main-content">
@@ -108,6 +117,7 @@
         </div>
     </div>
 
+    <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
