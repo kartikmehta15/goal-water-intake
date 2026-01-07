@@ -3,7 +3,11 @@ class AuthSystem {
     constructor() {
         this.usersKey = 'waterTracker_users';
         this.sessionKey = 'waterTracker_session';
-        this.init();
+        
+        // Only initialize auth page logic if we're on auth.html
+        if (window.location.pathname.endsWith('auth.html') || window.location.pathname.endsWith('/')) {
+            this.init();
+        }
     }
 
     init() {
@@ -281,7 +285,10 @@ class AuthSystem {
     }
 }
 
-// Initialize authentication system when DOM is loaded
+// Initialize authentication system when DOM is loaded (only on auth.html)
 document.addEventListener('DOMContentLoaded', () => {
-    new AuthSystem();
+    // Only create AuthSystem instance on auth.html page
+    if (window.location.pathname.endsWith('auth.html')) {
+        new AuthSystem();
+    }
 });
