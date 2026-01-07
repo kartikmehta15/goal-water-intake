@@ -339,18 +339,6 @@ class AuthSystem {
             return;
         }
 
-    async handleSignIn() {
-        const email = document.getElementById('signin-email').value.trim();
-        const password = document.getElementById('signin-password').value;
-
-        this.clearErrors();
-
-        // Validation
-        if (!this.validateEmail(email)) {
-            this.showError('signin-error', 'Please enter a valid email address.');
-            return;
-        }
-
         if (!password) {
             this.showError('signin-error', 'Please enter your password.');
             return;
