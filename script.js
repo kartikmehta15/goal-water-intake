@@ -415,20 +415,35 @@ class WaterIntakeTracker {
         
         // Add data rows
         data.forEach(row => {
-            csv += `${row.date},${row.intake},${row.goal},${row.percentage}%\n`;
+            // Escape CSV values (though our data is unlikely to have special chars)
+            const date = this.escapeCSV(row.date);
+            const intake = row.intake;
+            const goal = row.goal;
+            const percentage = `${row.percentage}%`;
+            csv += `${date},${intake},${goal},${percentage}\n`;
         });
         
         return csv;
+    }
+
+    escapeCSV(value) {
+        // Convert to string
+        const str = String(value);
+        // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+        if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
     }
 
     showExportFeedback() {
         const btn = document.getElementById('download-csv-btn');
         const originalText = btn.textContent;
         btn.textContent = '✓ Downloaded!';
-        btn.style.background = '#28a745';
+        btn.classList.add('success-feedback');
         setTimeout(() => {
             btn.textContent = originalText;
-            btn.style.background = '';
+            btn.classList.remove('success-feedback');
         }, 2000);
     }
 }

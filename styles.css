@@ -429,8 +429,12 @@ input[type="number"]:focus {
     border-color: var(--primary-color);
 }
 
-#download-csv-btn {
+.export-controls .btn-primary {
     align-self: flex-start;
+}
+
+.success-feedback {
+    background: var(--success) !important;
 }
 
 /* Responsive */
@@ -459,7 +463,7 @@ input[type="number"]:focus {
         width: 100%;
     }
 
-    #download-csv-btn {
+    .export-controls .btn-primary {
         width: 100%;
     }
 }
