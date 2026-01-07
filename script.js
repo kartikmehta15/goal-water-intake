@@ -426,6 +426,14 @@ class WaterIntakeTracker {
         return csv;
     }
 
+    /**
+     * Escapes a value for safe inclusion in CSV format.
+     * Wraps values containing commas, quotes, or newlines in double quotes,
+     * and escapes any existing quotes by doubling them.
+     * 
+     * @param {*} value - The value to escape
+     * @returns {string} The escaped CSV value
+     */
     escapeCSV(value) {
         // Convert to string
         const str = String(value);
