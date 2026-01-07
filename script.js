@@ -1,19 +1,11 @@
 // Water Intake Tracker Application
 class WaterIntakeTracker {
     constructor() {
-        // Check authentication first
-        if (!AuthSystem.requireAuth()) {
-            return; // Will redirect to auth page
-        }
-
-        // Get current user
-        this.currentUser = AuthSystem.getCurrentUser();
-        this.userEmail = this.currentUser.email;
-
         this.currentDate = new Date();
         this.selectedDate = new Date();
         this.defaultGoal = 2000;
-        this.data = this.loadData();
+        this.data = {};
+        this.unsubscribe = null; // For Firestore listener cleanup
         this.creatures = [
             { emoji: '🌵', name: 'Cactus' },
             { emoji: '🌻', name: 'Sunflower' },
@@ -47,7 +39,39 @@ class WaterIntakeTracker {
             { emoji: '🪸', name: 'Coral' },
             { emoji: '🦑', name: 'Squid' }
         ];
-        this.init();
+        
+        // Initialize with authentication
+        this.initializeWithAuth();
+    }
+
+    async initializeWithAuth() {
+        // Wait for Firebase Auth to be ready
+        if (!auth) {
+            console.error('Firebase not initialized');
+            window.location.href = 'auth.html';
+            return;
+        }
+
+        // Wait for authentication state
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            this.currentUser = user;
+            this.userId = user.uid;
+            this.userEmail = user.email;
+
+            // Check for and migrate localStorage data
+            await this.checkAndMigrateData();
+
+            // Setup Firestore realtime listener
+            this.setupFirestoreListener();
+
+            // Initialize UI
+            this.init();
+        });
     }
 
     init() {
@@ -70,6 +94,127 @@ class WaterIntakeTracker {
                 AuthSystem.logout();
             }
         });
+    }
+
+    async checkAndMigrateData() {
+        // Check if there's localStorage data to migrate
+        const localStorageKey = `waterIntakeData_${this.userEmail}`;
+        const localData = localStorage.getItem(localStorageKey);
+        
+        if (localData) {
+            const shouldMigrate = confirm(
+                'We found existing data on this device. Would you like to sync it to the cloud? ' +
+                'This will merge it with any existing cloud data.'
+            );
+            
+            if (shouldMigrate) {
+                try {
+                    this.showLoading('Migrating data to cloud...');
+                    const dataToMigrate = JSON.parse(localData);
+                    await this.migrateToFirestore(dataToMigrate);
+                    
+                    // Clear localStorage after successful migration
+                    localStorage.removeItem(localStorageKey);
+                    
+                    this.hideLoading();
+                    alert('Data successfully migrated to cloud!');
+                } catch (error) {
+                    this.hideLoading();
+                    console.error('Migration error:', error);
+                    alert('Failed to migrate data. Your local data is safe and will remain on this device.');
+                }
+            }
+        }
+    }
+
+    async migrateToFirestore(localData) {
+        const batch = db.batch();
+        let count = 0;
+        
+        for (const [dateKey, dayData] of Object.entries(localData)) {
+            if (dayData.intake !== undefined) {
+                const docRef = db.collection('users')
+                    .doc(this.userId)
+                    .collection('waterIntake')
+                    .doc(dateKey);
+                
+                batch.set(docRef, {
+                    date: dateKey,
+                    intake: dayData.intake || 0,
+                    goal: dayData.goal || this.defaultGoal,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                
+                count++;
+                
+                // Firestore batch has a limit of 500 operations
+                if (count >= 500) {
+                    await batch.commit();
+                    count = 0;
+                }
+            }
+        }
+        
+        // Commit any remaining operations
+        if (count > 0) {
+            await batch.commit();
+        }
+    }
+
+    setupFirestoreListener() {
+        // Clean up existing listener if any
+        if (this.unsubscribe) {
+            this.unsubscribe();
+        }
+
+        // Listen to real-time updates from Firestore
+        this.unsubscribe = db.collection('users')
+            .doc(this.userId)
+            .collection('waterIntake')
+            .onSnapshot((snapshot) => {
+                snapshot.docChanges().forEach((change) => {
+                    const data = change.doc.data();
+                    const dateKey = change.doc.id;
+                    
+                    if (change.type === 'added' || change.type === 'modified') {
+                        this.data[dateKey] = {
+                            intake: data.intake || 0,
+                            goal: data.goal || this.defaultGoal
+                        };
+                    } else if (change.type === 'removed') {
+                        delete this.data[dateKey];
+                    }
+                });
+                
+                // Update UI after data changes
+                this.updateDisplay();
+                this.renderCalendar();
+                this.updateStatistics();
+            }, (error) => {
+                console.error('Firestore listener error:', error);
+                this.showError('Failed to sync data. Please check your connection.');
+            });
+    }
+
+    showLoading(text = 'Loading...') {
+        const overlay = document.getElementById('loading-overlay');
+        const loadingText = document.querySelector('.loading-text');
+        if (overlay) {
+            if (loadingText) loadingText.textContent = text;
+            overlay.classList.add('show');
+        }
+    }
+
+    hideLoading() {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.classList.remove('show');
+        }
+    }
+
+    showError(message) {
+        // Simple error display - you can enhance this
+        alert(message);
     }
 
     setupEventListeners() {
@@ -126,46 +271,64 @@ class WaterIntakeTracker {
         return this.formatDateForInput(date);
     }
 
-    loadData() {
-        // User-specific data storage
-        const dataKey = `waterIntakeData_${this.userEmail}`;
-        const savedData = localStorage.getItem(dataKey);
-        return savedData ? JSON.parse(savedData) : {};
-    }
-
-    saveData() {
-        // User-specific data storage
-        const dataKey = `waterIntakeData_${this.userEmail}`;
-        localStorage.setItem(dataKey, JSON.stringify(this.data));
-    }
-
-    saveIntake() {
+    async saveIntake() {
         const amount = parseInt(document.getElementById('water-amount').value) || 0;
         const goal = parseInt(document.getElementById('daily-goal').value) || this.defaultGoal;
         const dateKey = this.getDateKey(this.selectedDate);
 
-        if (!this.data[dateKey]) {
-            this.data[dateKey] = {};
-        }
+        try {
+            // Update local data immediately for responsiveness
+            if (!this.data[dateKey]) {
+                this.data[dateKey] = {};
+            }
+            this.data[dateKey].intake = amount;
+            this.data[dateKey].goal = goal;
 
-        this.data[dateKey].intake = amount;
-        this.data[dateKey].goal = goal;
-        this.saveData();
-        this.updateDisplay();
-        this.renderCalendar();
-        this.updateStatistics();
-        
-        // Show feedback
-        this.showSaveFeedback();
+            // Save to Firestore
+            await db.collection('users')
+                .doc(this.userId)
+                .collection('waterIntake')
+                .doc(dateKey)
+                .set({
+                    date: dateKey,
+                    intake: amount,
+                    goal: goal,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+            // Show feedback
+            this.showSaveFeedback();
+        } catch (error) {
+            console.error('Error saving intake:', error);
+            this.showError('Failed to save data. Please check your connection.');
+        }
     }
 
-    saveGoal(goal) {
+    async saveGoal(goal) {
         const dateKey = this.getDateKey(this.selectedDate);
-        if (!this.data[dateKey]) {
-            this.data[dateKey] = { intake: 0 };
+        
+        try {
+            // Update local data immediately
+            if (!this.data[dateKey]) {
+                this.data[dateKey] = { intake: 0 };
+            }
+            this.data[dateKey].goal = goal;
+
+            // Save to Firestore
+            await db.collection('users')
+                .doc(this.userId)
+                .collection('waterIntake')
+                .doc(dateKey)
+                .set({
+                    date: dateKey,
+                    intake: this.data[dateKey].intake || 0,
+                    goal: goal,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+        } catch (error) {
+            console.error('Error saving goal:', error);
+            this.showError('Failed to save goal. Please check your connection.');
         }
-        this.data[dateKey].goal = goal;
-        this.saveData();
     }
 
     showSaveFeedback() {
