@@ -52,7 +52,8 @@ class WaterIntakeTracker {
     setupEventListeners() {
         // Date selector
         document.getElementById('selected-date').addEventListener('change', (e) => {
-            this.selectedDate = new Date(e.target.value + 'T00:00:00');
+            const [year, month, day] = e.target.value.split('-');
+            this.selectedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
             this.updateDisplay();
         });
 
@@ -164,7 +165,7 @@ class WaterIntakeTracker {
         const dayData = this.data[dateKey] || { intake: 0, goal: this.defaultGoal };
         const intake = dayData.intake || 0;
         const goal = dayData.goal || this.defaultGoal;
-        const percentage = Math.min(Math.round((intake / goal) * 100), 100);
+        const percentage = Math.round((intake / goal) * 100);
 
         // Update form fields
         document.getElementById('water-amount').value = intake;
@@ -175,7 +176,9 @@ class WaterIntakeTracker {
 
         // Update creature display
         const creature = this.getCreatureForDate(this.selectedDate);
-        document.getElementById('creature-name').textContent = `Today's companion: ${creature.name}`;
+        const isToday = this.selectedDate.toDateString() === new Date().toDateString();
+        const companionText = isToday ? "Today's companion" : "Day's companion";
+        document.getElementById('creature-name').textContent = `${companionText}: ${creature.name}`;
         
         const creatureDisplay = document.getElementById('creature-display');
         creatureDisplay.innerHTML = `<span>${creature.emoji}</span>`;
