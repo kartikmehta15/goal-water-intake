@@ -1,13 +1,23 @@
 // Authentication System for Water Intake Tracker
 class AuthSystem {
+    // Class constants for localStorage keys
+    static USERS_KEY = 'waterTracker_users';
+    static SESSION_KEY = 'waterTracker_session';
+
     constructor() {
-        this.usersKey = 'waterTracker_users';
-        this.sessionKey = 'waterTracker_session';
+        this.usersKey = AuthSystem.USERS_KEY;
+        this.sessionKey = AuthSystem.SESSION_KEY;
         
         // Only initialize auth page logic if we're on auth.html
-        if (window.location.pathname.endsWith('auth.html') || window.location.pathname.endsWith('/')) {
+        if (this.isAuthPage()) {
             this.init();
         }
+    }
+
+    isAuthPage() {
+        // Check if we're on the auth.html page
+        const path = window.location.pathname;
+        return path.endsWith('auth.html') || path === '/' || path === '';
     }
 
     init() {
@@ -251,17 +261,16 @@ class AuthSystem {
             email: email,
             loginTime: new Date().toISOString()
         };
-        localStorage.setItem(this.sessionKey, JSON.stringify(session));
+        localStorage.setItem(AuthSystem.SESSION_KEY, JSON.stringify(session));
     }
 
     isAuthenticated() {
-        const session = localStorage.getItem(this.sessionKey);
+        const session = localStorage.getItem(AuthSystem.SESSION_KEY);
         return session !== null;
     }
 
     static getCurrentUser() {
-        const sessionKey = 'waterTracker_session';
-        const session = localStorage.getItem(sessionKey);
+        const session = localStorage.getItem(AuthSystem.SESSION_KEY);
         if (session) {
             return JSON.parse(session);
         }
@@ -269,14 +278,12 @@ class AuthSystem {
     }
 
     static logout() {
-        const sessionKey = 'waterTracker_session';
-        localStorage.removeItem(sessionKey);
+        localStorage.removeItem(AuthSystem.SESSION_KEY);
         window.location.href = 'auth.html';
     }
 
     static requireAuth() {
-        const sessionKey = 'waterTracker_session';
-        const session = localStorage.getItem(sessionKey);
+        const session = localStorage.getItem(AuthSystem.SESSION_KEY);
         if (!session) {
             window.location.href = 'auth.html';
             return false;
@@ -288,7 +295,9 @@ class AuthSystem {
 // Initialize authentication system when DOM is loaded (only on auth.html)
 document.addEventListener('DOMContentLoaded', () => {
     // Only create AuthSystem instance on auth.html page
-    if (window.location.pathname.endsWith('auth.html')) {
-        new AuthSystem();
+    // Using AuthSystem.prototype to check if we're on auth page
+    const authSystem = new AuthSystem();
+    if (authSystem.isAuthPage()) {
+        // Instance already initialized in constructor
     }
 });
