@@ -47,6 +47,7 @@ class WaterIntakeTracker {
         this.updateDisplay();
         this.renderCalendar();
         this.updateStatistics();
+        this.initializeExportDates();
     }
 
     setupEventListeners() {
@@ -77,6 +78,11 @@ class WaterIntakeTracker {
         document.getElementById('next-month').addEventListener('click', () => {
             this.currentDate.setMonth(this.currentDate.getMonth() + 1);
             this.renderCalendar();
+        });
+
+        // CSV Export button
+        document.getElementById('download-csv-btn').addEventListener('click', () => {
+            this.downloadCSV();
         });
     }
 
@@ -318,6 +324,112 @@ class WaterIntakeTracker {
         document.getElementById('stat-50').textContent = stats.level50;
         document.getElementById('stat-25').textContent = stats.level25;
         document.getElementById('stat-0').textContent = stats.level0;
+    }
+
+    initializeExportDates() {
+        const today = new Date();
+        const thirtyDaysAgo = new Date(today);
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        
+        document.getElementById('export-start-date').value = this.formatDateForInput(thirtyDaysAgo);
+        document.getElementById('export-end-date').value = this.formatDateForInput(today);
+        document.getElementById('export-end-date').max = this.formatDateForInput(today);
+    }
+
+    downloadCSV() {
+        let startDate = document.getElementById('export-start-date').value;
+        let endDate = document.getElementById('export-end-date').value;
+        
+        // If no dates are selected, use defaults (30 days ago to today)
+        if (!startDate || !endDate) {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            startDate = this.formatDateForInput(thirtyDaysAgo);
+            endDate = this.formatDateForInput(today);
+        }
+        
+        // If start date is after end date, swap them
+        if (startDate > endDate) {
+            [startDate, endDate] = [endDate, startDate];
+            document.getElementById('export-start-date').value = startDate;
+            document.getElementById('export-end-date').value = endDate;
+        }
+        
+        // Filter data based on date range
+        const filteredData = this.filterDataByDateRange(startDate, endDate);
+        
+        // Check if there's any data in the selected range
+        if (filteredData.length === 0) {
+            alert('No data available in the selected date range.');
+            return;
+        }
+        
+        // Generate CSV content
+        const csvContent = this.generateCSV(filteredData);
+        
+        // Create and download the file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `water-intake-${startDate}-to-${endDate}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Show feedback
+        this.showExportFeedback();
+    }
+
+    filterDataByDateRange(startDate, endDate) {
+        const filtered = [];
+        
+        for (const dateKey in this.data) {
+            if (dateKey >= startDate && dateKey <= endDate) {
+                const dayData = this.data[dateKey];
+                const intake = dayData.intake || 0;
+                const goal = dayData.goal || this.defaultGoal;
+                const percentage = Math.round((intake / goal) * 100);
+                
+                filtered.push({
+                    date: dateKey,
+                    intake: intake,
+                    goal: goal,
+                    percentage: percentage
+                });
+            }
+        }
+        
+        // Sort by date
+        filtered.sort((a, b) => a.date.localeCompare(b.date));
+        
+        return filtered;
+    }
+
+    generateCSV(data) {
+        // CSV header
+        let csv = 'Date,Water Intake (ml),Daily Goal (ml),Percentage\n';
+        
+        // Add data rows
+        data.forEach(row => {
+            csv += `${row.date},${row.intake},${row.goal},${row.percentage}%\n`;
+        });
+        
+        return csv;
+    }
+
+    showExportFeedback() {
+        const btn = document.getElementById('download-csv-btn');
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Downloaded!';
+        btn.style.background = '#28a745';
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+        }, 2000);
     }
 }
 
