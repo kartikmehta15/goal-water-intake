@@ -16,6 +16,26 @@ let auth = null;
 let db = null;
 
 try {
+    // Check if Firebase config is valid
+    if (firebaseConfig.apiKey === "YOUR_API_KEY_HERE" || 
+        firebaseConfig.projectId === "YOUR_PROJECT_ID") {
+        console.error('⚠️ Firebase is not configured properly!');
+        console.error('Please update the firebaseConfig in auth.js with your actual Firebase credentials.');
+        console.error('See README.md for setup instructions.');
+        
+        // Show user-friendly error
+        document.addEventListener('DOMContentLoaded', () => {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc3545;color:white;padding:20px;text-align:center;z-index:10000;';
+            errorDiv.innerHTML = `
+                <h3>⚠️ Firebase Configuration Required</h3>
+                <p>Please configure your Firebase project credentials in auth.js to use this application.</p>
+                <p style="font-size:0.9em;margin-top:10px;">See README.md for detailed setup instructions.</p>
+            `;
+            document.body.insertBefore(errorDiv, document.body.firstChild);
+        });
+    }
+    
     if (!firebase.apps.length) {
         firebaseApp = firebase.initializeApp(firebaseConfig);
     } else {

@@ -143,7 +143,7 @@ class WaterIntakeTracker {
     }
 
     async migrateToFirestore(localData) {
-        const batch = db.batch();
+        let batch = db.batch();
         let count = 0;
         
         for (const [dateKey, dayData] of Object.entries(localData)) {
@@ -163,8 +163,10 @@ class WaterIntakeTracker {
                 count++;
                 
                 // Firestore batch has a limit of 500 operations
-                if (count >= 500) {
+                // Use 490 as safety margin
+                if (count >= 490) {
                     await batch.commit();
+                    batch = db.batch(); // Create new batch
                     count = 0;
                 }
             }
