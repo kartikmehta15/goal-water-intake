@@ -1326,8 +1326,8 @@ class WaterIntakeTracker {
     }
 
     // Settings functionality
-    initializeSettings() {
-        this.loadUserSettings();
+    async initializeSettings() {
+        await this.loadUserSettings();
         this.setupSettingsEventListeners();
         this.setupReminderPickers();
         this.populateTimezones();
