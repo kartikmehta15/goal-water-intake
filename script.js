@@ -6,6 +6,7 @@ class WaterIntakeTracker {
         this.defaultGoal = 2000;
         this.data = {};
         this.unsubscribe = null; // For Firestore listener cleanup
+        this.previousPercentage = 0; // Track previous percentage for confetti
         this.creatures = [
             { emoji: '🌵', name: 'Cactus' },
             { emoji: '🌻', name: 'Sunflower' },
@@ -429,6 +430,22 @@ class WaterIntakeTracker {
         document.getElementById('goal-display').textContent = goal;
         document.getElementById('percentage-display').textContent = percentage;
 
+        // Update circular progress
+        this.updateCircularProgress(percentage);
+        
+        // Update remaining intake
+        const remaining = Math.max(0, goal - intake);
+        const remainingEl = document.getElementById('remaining-intake');
+        if (remainingEl) {
+            remainingEl.textContent = remaining;
+        }
+        
+        // Show confetti if goal reached
+        if (percentage >= 100 && this.previousPercentage < 100) {
+            this.showConfetti();
+        }
+        this.previousPercentage = percentage;
+
         // Update creature display
         const creature = this.getCreatureForDate(this.selectedDate);
         const isToday = this.selectedDate.toDateString() === new Date().toDateString();
@@ -448,6 +465,31 @@ class WaterIntakeTracker {
             fillBar.textContent = `${percentage}%`;
         } else {
             fillBar.textContent = '';
+        }
+    }
+
+    updateCircularProgress(percentage) {
+        const circle = document.getElementById('progress-circle');
+        if (circle) {
+            const radius = 65;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (percentage / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+        }
+    }
+
+    showConfetti() {
+        const emojis = ['💧', '🌊', '💙', '✨', '⭐'];
+        for (let i = 0; i < 20; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }, i * 50);
         }
     }
 
@@ -541,38 +583,101 @@ class WaterIntakeTracker {
         }
     }
 
-    updateStatistics() {
+    calculateStatistics() {
         const stats = {
-            level100: 0,
-            level75: 0,
-            level50: 0,
-            level25: 0,
-            level0: 0
+            level_100: 0,
+            level_75: 0,
+            level_50: 0,
+            level_25: 0,
+            level_0: 0,
+            total: 0
         };
 
         Object.keys(this.data).forEach(dateKey => {
             const dayData = this.data[dateKey];
             if (dayData && dayData.intake > 0) {
+                stats.total++;
                 const percentage = (dayData.intake / (dayData.goal || this.defaultGoal)) * 100;
                 if (percentage >= 100) {
-                    stats.level100++;
+                    stats.level_100++;
                 } else if (percentage >= 75) {
-                    stats.level75++;
+                    stats.level_75++;
                 } else if (percentage >= 50) {
-                    stats.level50++;
+                    stats.level_50++;
                 } else if (percentage >= 25) {
-                    stats.level25++;
+                    stats.level_25++;
                 } else {
-                    stats.level0++;
+                    stats.level_0++;
                 }
             }
         });
 
-        document.getElementById('stat-100').textContent = stats.level100;
-        document.getElementById('stat-75').textContent = stats.level75;
-        document.getElementById('stat-50').textContent = stats.level50;
-        document.getElementById('stat-25').textContent = stats.level25;
-        document.getElementById('stat-0').textContent = stats.level0;
+        return stats;
+    }
+
+    updateStatBars() {
+        const stats = this.calculateStatistics();
+        const total = stats.total || 1; // Avoid division by zero
+        
+        ['100', '75', '50', '25', '0'].forEach(level => {
+            const bar = document.getElementById(`bar-${level}`);
+            const count = stats[`level_${level}`] || 0;
+            const percentage = (count / total) * 100;
+            if (bar) {
+                setTimeout(() => {
+                    bar.style.width = `${percentage}%`;
+                }, 100);
+            }
+        });
+    }
+
+    calculateStreak() {
+        const dates = Object.keys(this.data).sort().reverse();
+        let streak = 0;
+        let currentDate = new Date();
+        
+        for (let i = 0; i < dates.length; i++) {
+            const dateStr = this.getDateKey(currentDate);
+            if (dates.includes(dateStr)) {
+                const dayData = this.data[dateStr];
+                const percentage = (dayData.intake / (dayData.goal || this.defaultGoal)) * 100;
+                if (percentage >= 100) {
+                    streak++;
+                    currentDate.setDate(currentDate.getDate() - 1);
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+        
+        return streak;
+    }
+
+    updateStatistics() {
+        const stats = this.calculateStatistics();
+        
+        // Update stat values
+        document.getElementById('stat-100').textContent = stats.level_100 || 0;
+        document.getElementById('stat-75').textContent = stats.level_75 || 0;
+        document.getElementById('stat-50').textContent = stats.level_50 || 0;
+        document.getElementById('stat-25').textContent = stats.level_25 || 0;
+        document.getElementById('stat-0').textContent = stats.level_0 || 0;
+        
+        // Update stat bars
+        this.updateStatBars();
+        
+        // Update streak and total
+        const streak = this.calculateStreak();
+        const streakEl = document.getElementById('current-streak');
+        const totalEl = document.getElementById('total-tracked-days');
+        if (streakEl) {
+            streakEl.textContent = streak;
+        }
+        if (totalEl) {
+            totalEl.textContent = stats.total || 0;
+        }
     }
 
     initializeExportDates() {
