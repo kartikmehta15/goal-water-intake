@@ -550,23 +550,6 @@ Stay hydrated! 💪
 
     <!-- EmailJS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-    <script>
-        // EmailJS initialization - will be configured by user in settings
-        (function() {
-            // Check if EmailJS config exists in localStorage
-            const emailjsConfig = localStorage.getItem('emailjs_config');
-            if (emailjsConfig) {
-                try {
-                    const config = JSON.parse(emailjsConfig);
-                    if (config.publicKey) {
-                        emailjs.init(config.publicKey);
-                    }
-                } catch (error) {
-                    console.error('Failed to initialize EmailJS:', error);
-                }
-            }
-        })();
-    </script>
     
     <script src="auth.js"></script>
     <script src="script.js"></script>

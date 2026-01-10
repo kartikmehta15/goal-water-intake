@@ -21,6 +21,7 @@ class WaterIntakeTracker {
         this.data = {};
         this.unsubscribe = null; // For Firestore listener cleanup
         this.previousPercentage = 0; // Track previous percentage for confetti
+        this.emailjsInitialized = false; // Track EmailJS initialization state
         this.creatures = [
             { emoji: '🌵', name: 'Cactus' },
             { emoji: '🌻', name: 'Sunflower' },
@@ -102,6 +103,9 @@ class WaterIntakeTracker {
         this.initializeExportDates();
         this.initializeSettings();
         
+        // Initialize EmailJS if configured
+        this.initializeEmailJS();
+        
         // Check for scheduled reminders on app load
         this.checkScheduledReminders();
         
@@ -112,10 +116,17 @@ class WaterIntakeTracker {
     // EmailJS Integration Methods
     
     initializeEmailJS() {
+        // Prevent duplicate initialization
+        if (this.emailjsInitialized) {
+            return true;
+        }
+        
         const config = this.getEmailJSConfig();
         if (config && config.publicKey) {
             try {
                 emailjs.init(config.publicKey);
+                this.emailjsInitialized = true;
+                console.log('EmailJS initialized successfully');
                 return true;
             } catch (error) {
                 console.error('Failed to initialize EmailJS:', error);
