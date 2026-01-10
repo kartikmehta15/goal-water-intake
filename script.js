@@ -1,8 +1,17 @@
 // Water Intake Tracker Application
 
-// Power User Code - NOT to be committed to repository in production
-// This should be set via environment variable or configuration
+// Power User Code - Frontend verification only
+// NOTE: In a production environment, this should be verified server-side.
+// Since we're using a static hosting (GitHub Pages) without backend,
+// this is stored client-side as a trade-off for zero-cost hosting.
+// The code provides basic access control for email features.
 const POWER_USER_CODE = 'WATER-HYDRO-2026-PWR9';
+
+// Email reminder configuration constants
+const REMINDER_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+const REMINDER_WINDOW_MS = 5 * 60 * 1000; // 5 minute window to catch reminders
+const TEST_MESSAGE_TIMEOUT_MS = 8000; // 8 seconds
+const CONFIG_MESSAGE_TIMEOUT_MS = 5000; // 5 seconds
 
 class WaterIntakeTracker {
     constructor() {
@@ -97,10 +106,24 @@ class WaterIntakeTracker {
         this.checkScheduledReminders();
         
         // Check reminders every 5 minutes while app is open
-        setInterval(() => this.checkScheduledReminders(), 5 * 60 * 1000);
+        setInterval(() => this.checkScheduledReminders(), REMINDER_CHECK_INTERVAL_MS);
     }
     
     // EmailJS Integration Methods
+    
+    initializeEmailJS() {
+        const config = this.getEmailJSConfig();
+        if (config && config.publicKey) {
+            try {
+                emailjs.init(config.publicKey);
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize EmailJS:', error);
+                return false;
+            }
+        }
+        return false;
+    }
     
     getEmailJSConfig() {
         const configStr = localStorage.getItem('emailjs_config');
@@ -135,13 +158,8 @@ class WaterIntakeTracker {
             return false;
         }
         
-        // Re-initialize EmailJS with current config
-        try {
-            emailjs.init(config.publicKey);
-        } catch (error) {
-            console.error('Failed to initialize EmailJS:', error);
-            return false;
-        }
+        // Initialize EmailJS if needed
+        this.initializeEmailJS();
         
         const progress = this.getCurrentProgress();
         
@@ -220,7 +238,7 @@ class WaterIntakeTracker {
                 
                 // If reminder time is between last check and now (or just passed)
                 const timeDiff = now - reminderTime;
-                if (timeDiff >= 0 && timeDiff < 5 * 60 * 1000 && reminderTime > lastCheckDate) {
+                if (timeDiff >= 0 && timeDiff < REMINDER_WINDOW_MS && reminderTime > lastCheckDate) {
                     // Check if already sent today
                     const sentKey = `reminder_sent_${reminderHour}_${reminderMinute}`;
                     const sentToday = localStorage.getItem(sentKey);
@@ -1383,10 +1401,10 @@ class WaterIntakeTracker {
         messageEl.className = `test-message ${type}`;
         messageEl.style.display = 'block';
         
-        // Auto-hide after 8 seconds
+        // Auto-hide after configured timeout
         setTimeout(() => {
             messageEl.style.display = 'none';
-        }, 8000);
+        }, TEST_MESSAGE_TIMEOUT_MS);
     }
 
     // Power User Unlock Methods
@@ -1455,8 +1473,8 @@ class WaterIntakeTracker {
         try {
             localStorage.setItem('emailjs_config', JSON.stringify(config));
             
-            // Re-initialize EmailJS
-            emailjs.init(publicKey);
+            // Initialize EmailJS with new config
+            this.initializeEmailJS();
             
             this.showConfigMessage('✅ EmailJS configuration saved successfully!', 'success');
         } catch (error) {
@@ -1485,10 +1503,10 @@ class WaterIntakeTracker {
         messageEl.textContent = message;
         messageEl.className = `config-message ${type}`;
         
-        // Auto-hide after 5 seconds
+        // Auto-hide after configured timeout
         setTimeout(() => {
             messageEl.className = 'config-message';
-        }, 5000);
+        }, CONFIG_MESSAGE_TIMEOUT_MS);
     }
 
     showUnlockMessage(message, type) {
