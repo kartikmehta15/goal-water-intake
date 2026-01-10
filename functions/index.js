@@ -291,7 +291,3 @@ exports.sendTestEmail = functions.https.onCall(async (data, context) => {
         throw new functions.https.HttpsError('internal', 'Failed to send test email: ' + error.message);
     }
 });
-        } catch (error) {
-            console.error('Error in sendEveningReminder:', error);
-        }
-    });
