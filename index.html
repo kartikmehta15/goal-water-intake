@@ -57,9 +57,36 @@
                     </div>
 
                     <div class="progress-display">
-                        <p><strong>Current Intake:</strong> <span id="current-intake">0</span> ml</p>
-                        <p><strong>Goal:</strong> <span id="goal-display">2000</span> ml</p>
-                        <p><strong>Percentage:</strong> <span id="percentage-display">0</span>%</p>
+                        <div class="circular-progress">
+                            <svg class="progress-ring" width="150" height="150">
+                                <defs>
+                                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#50C878;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <circle class="progress-ring-circle-bg" cx="75" cy="75" r="65" />
+                                <circle class="progress-ring-circle" cx="75" cy="75" r="65" id="progress-circle" />
+                            </svg>
+                            <div class="progress-text">
+                                <div class="progress-percentage" id="percentage-display">0%</div>
+                                <div class="progress-label">of goal</div>
+                            </div>
+                        </div>
+                        <div class="progress-details">
+                            <div class="progress-item">
+                                <span class="progress-item-label">Current:</span>
+                                <span class="progress-item-value"><span id="current-intake">0</span> ml</span>
+                            </div>
+                            <div class="progress-item">
+                                <span class="progress-item-label">Goal:</span>
+                                <span class="progress-item-value"><span id="goal-display">2000</span> ml</span>
+                            </div>
+                            <div class="progress-item">
+                                <span class="progress-item-label">Remaining:</span>
+                                <span class="progress-item-value"><span id="remaining-intake">2000</span> ml</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -77,27 +104,55 @@
 
             <!-- Statistics Section -->
             <section class="stats-section">
-                <h2>Summary Statistics</h2>
+                <h2>📊 Summary Statistics</h2>
                 <div class="stats-grid">
-                    <div class="stat-card">
+                    <div class="stat-card stat-excellent">
+                        <div class="stat-icon">🏆</div>
                         <div class="stat-value" id="stat-100">0</div>
                         <div class="stat-label">100%+ Goal Met</div>
+                        <div class="stat-bar">
+                            <div class="stat-bar-fill" id="bar-100" style="width: 0%"></div>
+                        </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card stat-good">
+                        <div class="stat-icon">💪</div>
                         <div class="stat-value" id="stat-75">0</div>
                         <div class="stat-label">75-99% Goal</div>
+                        <div class="stat-bar">
+                            <div class="stat-bar-fill" id="bar-75" style="width: 0%"></div>
+                        </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card stat-moderate">
+                        <div class="stat-icon">🌊</div>
                         <div class="stat-value" id="stat-50">0</div>
                         <div class="stat-label">50-74% Goal</div>
+                        <div class="stat-bar">
+                            <div class="stat-bar-fill" id="bar-50" style="width: 0%"></div>
+                        </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card stat-low">
+                        <div class="stat-icon">💧</div>
                         <div class="stat-value" id="stat-25">0</div>
                         <div class="stat-label">25-49% Goal</div>
+                        <div class="stat-bar">
+                            <div class="stat-bar-fill" id="bar-25" style="width: 0%"></div>
+                        </div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card stat-minimal">
+                        <div class="stat-icon">⚡</div>
                         <div class="stat-value" id="stat-0">0</div>
                         <div class="stat-label">Below 25%</div>
+                        <div class="stat-bar">
+                            <div class="stat-bar-fill" id="bar-0" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stats-summary">
+                    <div class="streak-counter" id="streak-counter">
+                        🔥 <span id="current-streak">0</span> day streak
+                    </div>
+                    <div class="total-days">
+                        Total tracked: <span id="total-tracked-days">0</span> days
                     </div>
                 </div>
             </section>
