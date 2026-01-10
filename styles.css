@@ -400,7 +400,8 @@ input[type="number"]:focus {
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
-    gap: 8px;
+    gap: 4px;
+    max-width: 100%;
 }
 
 /* Full Width Calendar */
@@ -475,17 +476,19 @@ input[type="number"]:focus {
 }
 
 .calendar-day {
-    aspect-ratio: 1;
+    aspect-ratio: 1.2;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     border: 2px solid var(--border);
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s ease;
-    padding: 5px;
-    font-size: 0.9rem;
+    padding: 4px;
+    font-size: 0.8rem;
+    min-height: 50px;
+    max-height: 70px;
 }
 
 .calendar-day:hover {
@@ -529,11 +532,12 @@ input[type="number"]:focus {
 
 .calendar-day .date-num {
     font-weight: 600;
-    margin-bottom: 2px;
+    margin-bottom: 1px;
+    font-size: 0.95rem;
 }
 
 .calendar-day .intake-indicator {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--text-light);
 }
 
@@ -703,28 +707,30 @@ input[type="number"]:focus {
 /* Circular Progress Indicator */
 .circular-progress {
     position: relative;
-    width: 180px;
-    height: 180px;
+    width: 120px;
+    height: 120px;
     margin: 30px auto;
 }
 
 .progress-ring {
+    width: 120px;
+    height: 120px;
     transform: rotate(-90deg);
 }
 
 .progress-ring-circle-bg {
     fill: none;
     stroke: #e1e4e8;
-    stroke-width: 8;
+    stroke-width: 6;
 }
 
 .progress-ring-circle {
     fill: none;
     stroke: url(#progressGradient);
-    stroke-width: 8;
+    stroke-width: 6;
     stroke-linecap: round;
-    stroke-dasharray: 471;
-    stroke-dashoffset: 471;
+    stroke-dasharray: 326;
+    stroke-dashoffset: 326;
     transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease;
 }
 
@@ -737,14 +743,14 @@ input[type="number"]:focus {
 }
 
 .progress-percentage {
-    font-size: 2rem;
+    font-size: 1.6rem;
     font-weight: 700;
     color: var(--primary-color);
     line-height: 1;
 }
 
 .progress-label {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: var(--text-light);
     margin-top: 4px;
 }
@@ -898,6 +904,17 @@ input[type="number"]:focus {
 
     .calendar-day {
         font-size: 0.75rem;
+        padding: 3px;
+        min-height: 45px;
+        max-height: 60px;
+    }
+    
+    .calendar-day .date-num {
+        font-size: 0.85rem;
+    }
+    
+    .calendar-day .intake-indicator {
+        font-size: 0.6rem;
     }
 
     .stats-grid {
