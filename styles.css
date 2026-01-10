@@ -1,0 +1,469 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #4A90E2;
+    --primary-hover: #357ABD;
+    --secondary-color: #50C878;
+    --background: #f5f7fa;
+    --card-bg: #ffffff;
+    --text-dark: #333333;
+    --text-light: #666666;
+    --border: #e1e4e8;
+    --success: #28a745;
+    --warning: #ffc107;
+    --danger: #dc3545;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: var(--text-dark);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.tagline {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+section {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+}
+
+.today-section {
+    grid-column: 1 / -1;
+}
+
+h2 {
+    color: var(--primary-color);
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+/* Date Selector */
+.date-selector {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.date-selector label {
+    font-weight: 600;
+}
+
+.date-selector input {
+    padding: 8px 12px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+/* Visual Container */
+.visual-container {
+    text-align: center;
+    margin: 30px 0;
+    padding: 20px;
+    background: linear-gradient(to bottom, #e3f2fd 0%, #f5f5f5 100%);
+    border-radius: 12px;
+}
+
+.creature-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 15px;
+}
+
+.creature-display {
+    font-size: 5rem;
+    line-height: 1;
+    margin: 20px 0;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.creature-display::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: var(--fill-height, 0%);
+    background: linear-gradient(to top, rgba(74, 144, 226, 0.3), transparent);
+    border-radius: 8px;
+    z-index: 0;
+    transition: height 0.5s ease;
+}
+
+.creature-display span {
+    position: relative;
+    z-index: 1;
+}
+
+.fill-indicator {
+    width: 100%;
+    height: 30px;
+    background: #e0e0e0;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-top: 15px;
+}
+
+.fill-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    border-radius: 15px;
+    width: 0%;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* Intake Form */
+.intake-form {
+    display: grid;
+    gap: 20px;
+}
+
+.goal-setting,
+.intake-input {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.goal-setting label,
+.intake-input label {
+    font-weight: 600;
+    min-width: 150px;
+}
+
+input[type="number"] {
+    padding: 10px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+    flex: 1;
+    min-width: 120px;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+}
+
+.btn-secondary {
+    background: var(--background);
+    color: var(--text-dark);
+    border: 2px solid var(--border);
+}
+
+.btn-secondary:hover {
+    background: var(--border);
+}
+
+.progress-display {
+    background: var(--background);
+    padding: 15px;
+    border-radius: 8px;
+    display: grid;
+    gap: 8px;
+}
+
+.progress-display p {
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Calendar */
+.calendar-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.calendar-controls h3 {
+    color: var(--text-dark);
+    font-size: 1.2rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 5px;
+    font-size: 0.9rem;
+}
+
+.calendar-day:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow);
+}
+
+.calendar-day.header {
+    font-weight: 600;
+    background: var(--primary-color);
+    color: white;
+    cursor: default;
+    border: none;
+}
+
+.calendar-day.header:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.calendar-day.empty {
+    border: none;
+    cursor: default;
+}
+
+.calendar-day.empty:hover {
+    transform: none;
+}
+
+.calendar-day.today {
+    border-color: var(--primary-color);
+    background: rgba(74, 144, 226, 0.1);
+    font-weight: 600;
+}
+
+.calendar-day.selected {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.calendar-day .date-num {
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.calendar-day .intake-indicator {
+    font-size: 0.7rem;
+    color: var(--text-light);
+}
+
+.calendar-day.level-100 {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+.calendar-day.level-75 {
+    background: #90ee90;
+    border-color: #90ee90;
+}
+
+.calendar-day.level-50 {
+    background: #ffc107;
+    border-color: #ffc107;
+}
+
+.calendar-day.level-25 {
+    background: #ffeb99;
+    border-color: #ffeb99;
+}
+
+.calendar-day.level-0 {
+    background: #ffcccb;
+    border-color: #ffcccb;
+}
+
+/* Statistics */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 20px;
+    background: var(--background);
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+/* Export Section */
+.export-section {
+    grid-column: 1 / -1;
+}
+
+.export-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.date-range {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+}
+
+.date-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    min-width: 200px;
+}
+
+.date-input-group label {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.date-input-group input[type="date"] {
+    padding: 10px 12px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.date-input-group input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.export-controls .btn-primary {
+    align-self: flex-start;
+}
+
+.success-feedback {
+    background: var(--success) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+
+    .creature-display {
+        font-size: 3rem;
+    }
+
+    .calendar-day {
+        font-size: 0.75rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .date-range {
+        flex-direction: column;
+    }
+
+    .date-input-group {
+        width: 100%;
+    }
+
+    .export-controls .btn-primary {
+        width: 100%;
+    }
+}
