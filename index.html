@@ -15,95 +15,141 @@
 <body>
     <div class="container">
         <header>
-            <h1>💧 Water Intake Tracker</h1>
-            <p class="tagline">Stay hydrated, stay healthy!</p>
-            <!-- User Profile Section -->
-            <div class="user-profile" id="user-profile">
-                <div class="user-info">
-                    <span class="user-icon">👤</span>
-                    <span class="user-email" id="user-email"></span>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1>💧 Water Intake Tracker</h1>
                 </div>
-                <button class="logout-btn" id="logout-btn">Logout</button>
+                <div class="user-profile" id="user-profile">
+                    <div class="user-info">
+                        <span class="user-icon">👤</span>
+                        <span class="user-email" id="user-email"></span>
+                    </div>
+                    <button class="logout-btn" id="logout-btn">Logout</button>
+                </div>
             </div>
+            
+            <!-- Tab Navigation -->
+            <nav class="tab-navigation">
+                <button class="tab-btn active" data-tab="today">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-label">Today</span>
+                </button>
+                <button class="tab-btn" data-tab="calendar">
+                    <span class="tab-icon">📅</span>
+                    <span class="tab-label">Calendar</span>
+                </button>
+                <button class="tab-btn" data-tab="stats">
+                    <span class="tab-icon">📈</span>
+                    <span class="tab-label">Statistics</span>
+                </button>
+                <button class="tab-btn" data-tab="export">
+                    <span class="tab-icon">💾</span>
+                    <span class="tab-label">Export</span>
+                </button>
+            </nav>
         </header>
 
         <div class="main-content">
-            <!-- Today's Tracker Section -->
-            <section class="today-section">
-                <h2>Today's Progress</h2>
-                <div class="date-selector">
-                    <label for="selected-date">Select Date:</label>
-                    <input type="date" id="selected-date" />
-                </div>
-                
-                <div class="visual-container">
-                    <div class="creature-name" id="creature-name"></div>
-                    <div class="creature-display" id="creature-display"></div>
-                    <div class="fill-indicator" id="fill-indicator">
-                        <div class="fill-bar" id="fill-bar"></div>
-                    </div>
-                </div>
-
-                <div class="intake-form">
-                    <div class="goal-setting">
-                        <label for="daily-goal">Daily Goal (ml):</label>
-                        <input type="number" id="daily-goal" value="2000" min="500" max="10000" step="100" />
+            <!-- Tab 1: Today -->
+            <section class="tab-content active" id="tab-today">
+                <div class="today-layout">
+                    <!-- Compact Info Box (top-right) -->
+                    <div class="info-box">
+                        <div class="info-item">
+                            <span class="info-label">Current</span>
+                            <span class="info-value"><span id="current-intake">0</span>ml</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Goal</span>
+                            <span class="info-value"><span id="goal-display">2000</span>ml</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Left</span>
+                            <span class="info-value"><span id="remaining-intake">2000</span>ml</span>
+                        </div>
                     </div>
                     
-                    <div class="intake-input">
-                        <label for="water-amount">Water Intake (ml):</label>
-                        <input type="number" id="water-amount" value="0" min="0" step="50" />
-                        <button id="save-btn" class="btn-primary">Save</button>
-                    </div>
-
-                    <div class="progress-display">
+                    <div class="today-main">
+                        <div class="date-selector">
+                            <label for="selected-date">Date:</label>
+                            <input type="date" id="selected-date" />
+                        </div>
+                        
+                        <div class="visual-container">
+                            <div class="creature-name" id="creature-name"></div>
+                            <div class="creature-display" id="creature-display"></div>
+                        </div>
+                        
                         <div class="circular-progress">
-                            <svg class="progress-ring" width="150" height="150">
+                            <svg class="progress-ring" width="180" height="180">
                                 <defs>
                                     <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                         <stop offset="0%" style="stop-color:#4A90E2;stop-opacity:1" />
                                         <stop offset="100%" style="stop-color:#50C878;stop-opacity:1" />
                                     </linearGradient>
                                 </defs>
-                                <circle class="progress-ring-circle-bg" cx="75" cy="75" r="65" />
-                                <circle class="progress-ring-circle" cx="75" cy="75" r="65" id="progress-circle" />
+                                <circle class="progress-ring-circle-bg" cx="90" cy="90" r="75" />
+                                <circle class="progress-ring-circle" cx="90" cy="90" r="75" id="progress-circle" />
                             </svg>
                             <div class="progress-text">
                                 <div class="progress-percentage" id="percentage-display">0%</div>
                                 <div class="progress-label">of goal</div>
                             </div>
                         </div>
-                        <div class="progress-details">
-                            <div class="progress-item">
-                                <span class="progress-item-label">Current:</span>
-                                <span class="progress-item-value"><span id="current-intake">0</span> ml</span>
+                        
+                        <!-- Quick Add Buttons -->
+                        <div class="quick-add-buttons">
+                            <button class="quick-add-btn" data-amount="250">+250ml</button>
+                            <button class="quick-add-btn" data-amount="500">+500ml</button>
+                            <button class="quick-add-btn" data-amount="1000">+1L</button>
+                            <button class="quick-add-btn custom" id="show-custom-btn">Custom</button>
+                        </div>
+                        
+                        <!-- Custom Input (initially hidden) -->
+                        <div class="custom-input-container" id="custom-input-container" style="display: none;">
+                            <div class="intake-input">
+                                <label for="water-amount">Custom Amount (ml):</label>
+                                <input type="number" id="water-amount" value="0" min="0" step="50" />
+                                <button id="save-btn" class="btn-primary">Save</button>
                             </div>
-                            <div class="progress-item">
-                                <span class="progress-item-label">Goal:</span>
-                                <span class="progress-item-value"><span id="goal-display">2000</span> ml</span>
-                            </div>
-                            <div class="progress-item">
-                                <span class="progress-item-label">Remaining:</span>
-                                <span class="progress-item-value"><span id="remaining-intake">2000</span> ml</span>
-                            </div>
+                        </div>
+                        
+                        <div class="goal-setting">
+                            <label for="daily-goal">Daily Goal (ml):</label>
+                            <input type="number" id="daily-goal" value="2000" min="500" max="10000" step="100" />
                         </div>
                     </div>
                 </div>
             </section>
-
-            <!-- Calendar View Section -->
-            <section class="calendar-section">
-                <h2>Calendar View</h2>
+            
+            <!-- Tab 2: Calendar (FULL WIDTH) -->
+            <section class="tab-content" id="tab-calendar">
+                <div class="calendar-header">
+                    <h2>Monthly Overview</h2>
+                </div>
                 <div class="calendar-controls">
                     <button id="prev-month" class="btn-secondary">← Previous</button>
                     <h3 id="current-month"></h3>
                     <button id="next-month" class="btn-secondary">Next →</button>
                 </div>
-                <div id="calendar-grid" class="calendar-grid"></div>
+                <div id="calendar-grid" class="calendar-grid calendar-fullwidth"></div>
+                <div class="calendar-footer">
+                    <div class="calendar-legend">
+                        <span class="legend-item"><span class="legend-color" style="background: #28a745;"></span> 100%+</span>
+                        <span class="legend-item"><span class="legend-color" style="background: #90ee90;"></span> 75-99%</span>
+                        <span class="legend-item"><span class="legend-color" style="background: #ffc107;"></span> 50-74%</span>
+                        <span class="legend-item"><span class="legend-color" style="background: #ffeb99;"></span> 25-49%</span>
+                        <span class="legend-item"><span class="legend-color" style="background: #ffcccb;"></span> &lt;25%</span>
+                    </div>
+                    <div class="month-summary" id="month-summary">
+                        <strong>This Month:</strong> <span id="month-total-days">0</span> days tracked | 
+                        <span id="month-goal-met">0</span> days goal met
+                    </div>
+                </div>
             </section>
-
-            <!-- Statistics Section -->
-            <section class="stats-section">
+            
+            <!-- Tab 3: Statistics -->
+            <section class="tab-content" id="tab-stats">
                 <h2>📊 Summary Statistics</h2>
                 <div class="stats-grid">
                     <div class="stat-card stat-excellent">
@@ -156,10 +202,10 @@
                     </div>
                 </div>
             </section>
-
-            <!-- Export Section -->
-            <section class="export-section">
-                <h2>Export Data</h2>
+            
+            <!-- Tab 4: Export -->
+            <section class="tab-content" id="tab-export">
+                <h2>Export Your Data</h2>
                 <div class="export-controls">
                     <div class="date-range">
                         <div class="date-input-group">
