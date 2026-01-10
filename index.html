@@ -46,6 +46,10 @@
                     <span class="tab-icon">💾</span>
                     <span class="tab-label">Export</span>
                 </button>
+                <button class="tab-btn" data-tab="settings">
+                    <span class="tab-icon">⚙️</span>
+                    <span class="tab-label">Settings</span>
+                </button>
             </nav>
         </header>
 
@@ -218,6 +222,68 @@
                         </div>
                     </div>
                     <button id="download-csv-btn" class="btn-primary">📥 Download CSV</button>
+                </div>
+            </section>
+            
+            <!-- Tab 5: Settings -->
+            <section class="tab-content" id="tab-settings">
+                <h2>⚙️ Settings</h2>
+                
+                <div class="settings-card">
+                    <h3>📧 Email Notifications</h3>
+                    <p class="settings-description">Receive email reminders to stay hydrated throughout the day</p>
+                    
+                    <div class="setting-item">
+                        <div class="setting-header">
+                            <label class="switch">
+                                <input type="checkbox" id="email-notifications-enabled">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="setting-label">Enable Email Reminders</span>
+                        </div>
+                    </div>
+
+                    <div id="notification-settings" class="notification-settings" style="display: none;">
+                        <div class="setting-item">
+                            <label class="setting-label">Reminder Times</label>
+                            <div class="reminder-times">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="reminder-11am" checked>
+                                    <span>11:00 AM - Morning Reminder</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="reminder-3pm" checked>
+                                    <span>3:00 PM - Afternoon Reminder</span>
+                                </label>
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="reminder-7pm" checked>
+                                    <span>7:00 PM - Evening Reminder</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="setting-item">
+                            <label for="user-timezone" class="setting-label">Your Timezone</label>
+                            <select id="user-timezone" class="timezone-select">
+                                <!-- Will be populated by JavaScript -->
+                            </select>
+                        </div>
+
+                        <button id="save-settings-btn" class="btn-primary">💾 Save Settings</button>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>👤 Account Settings</h3>
+                    <div class="setting-item">
+                        <label class="setting-label">Email Address</label>
+                        <p class="user-email-display" id="settings-user-email"></p>
+                    </div>
+                    <div class="setting-item">
+                        <label for="daily-goal-setting" class="setting-label">Default Daily Goal (ml)</label>
+                        <input type="number" id="daily-goal-setting" class="goal-input" value="2000" min="500" max="10000" step="100">
+                    </div>
+                    <button id="save-account-settings-btn" class="btn-primary">💾 Save Account Settings</button>
                 </div>
             </section>
         </div>

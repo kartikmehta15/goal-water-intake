@@ -86,6 +86,7 @@ class WaterIntakeTracker {
         this.updateStatistics();
         this.updateMonthSummary();
         this.initializeExportDates();
+        this.initializeSettings();
     }
 
     setupUserProfile() {
@@ -945,6 +946,151 @@ class WaterIntakeTracker {
         
         if (totalEl) totalEl.textContent = summary.totalDays;
         if (goalMetEl) goalMetEl.textContent = summary.goalMetDays;
+    }
+
+    // Settings functionality
+    initializeSettings() {
+        this.loadUserSettings();
+        this.setupSettingsEventListeners();
+        this.populateTimezones();
+    }
+
+    populateTimezones() {
+        const timezones = [
+            'America/New_York',
+            'America/Chicago',
+            'America/Denver',
+            'America/Los_Angeles',
+            'America/Phoenix',
+            'America/Anchorage',
+            'Pacific/Honolulu',
+            'Europe/London',
+            'Europe/Paris',
+            'Europe/Berlin',
+            'Asia/Dubai',
+            'Asia/Kolkata',
+            'Asia/Bangkok',
+            'Asia/Shanghai',
+            'Asia/Tokyo',
+            'Australia/Sydney',
+            'Pacific/Auckland'
+        ];
+
+        const select = document.getElementById('user-timezone');
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+        timezones.forEach(tz => {
+            const option = document.createElement('option');
+            option.value = tz;
+            option.textContent = tz.replace(/_/g, ' ');
+            if (tz === userTimezone) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+
+        // Add user's timezone if not in list
+        if (!timezones.includes(userTimezone)) {
+            const option = document.createElement('option');
+            option.value = userTimezone;
+            option.textContent = userTimezone.replace(/_/g, ' ');
+            option.selected = true;
+            select.insertBefore(option, select.firstChild);
+        }
+    }
+
+    setupSettingsEventListeners() {
+        // Email notifications toggle
+        const emailToggle = document.getElementById('email-notifications-enabled');
+        const notificationSettings = document.getElementById('notification-settings');
+        
+        emailToggle.addEventListener('change', (e) => {
+            notificationSettings.style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        // Save notification settings
+        document.getElementById('save-settings-btn').addEventListener('click', () => {
+            this.saveUserSettings();
+        });
+
+        // Save account settings
+        document.getElementById('save-account-settings-btn').addEventListener('click', () => {
+            this.saveAccountSettings();
+        });
+
+        // Display user email in settings
+        document.getElementById('settings-user-email').textContent = this.userEmail;
+    }
+
+    async loadUserSettings() {
+        try {
+            const userDoc = await db.collection('users').doc(this.userId).get();
+            
+            if (userDoc.exists) {
+                const settings = userDoc.data();
+                
+                // Load notification settings
+                document.getElementById('email-notifications-enabled').checked = settings.emailNotificationsEnabled || false;
+                document.getElementById('notification-settings').style.display = settings.emailNotificationsEnabled ? 'block' : 'none';
+                
+                document.getElementById('reminder-11am').checked = settings.reminder11am !== false;
+                document.getElementById('reminder-3pm').checked = settings.reminder3pm !== false;
+                document.getElementById('reminder-7pm').checked = settings.reminder7pm !== false;
+                
+                if (settings.timezone) {
+                    document.getElementById('user-timezone').value = settings.timezone;
+                }
+                
+                // Load account settings
+                if (settings.defaultDailyGoal) {
+                    document.getElementById('daily-goal-setting').value = settings.defaultDailyGoal;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading user settings:', error);
+        }
+    }
+
+    async saveUserSettings() {
+        try {
+            const settings = {
+                emailNotificationsEnabled: document.getElementById('email-notifications-enabled').checked,
+                reminder11am: document.getElementById('reminder-11am').checked,
+                reminder3pm: document.getElementById('reminder-3pm').checked,
+                reminder7pm: document.getElementById('reminder-7pm').checked,
+                timezone: document.getElementById('user-timezone').value,
+                email: this.userEmail,
+                userId: this.userId,
+                updatedAt: new Date()
+            };
+
+            await db.collection('users').doc(this.userId).set(settings, { merge: true });
+            
+            this.showSuccess('Notification settings saved successfully!');
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            this.showError('Failed to save settings. Please try again.');
+        }
+    }
+
+    async saveAccountSettings() {
+        try {
+            const defaultGoal = parseInt(document.getElementById('daily-goal-setting').value);
+            
+            await db.collection('users').doc(this.userId).set({
+                defaultDailyGoal: defaultGoal,
+                updatedAt: new Date()
+            }, { merge: true });
+            
+            // Update current goal
+            document.getElementById('daily-goal').value = defaultGoal;
+            this.defaultGoal = defaultGoal;
+            
+            this.showSuccess('Account settings saved successfully!');
+        } catch (error) {
+            console.error('Error saving account settings:', error);
+            this.showError('Failed to save account settings. Please try again.');
+        }
     }
 }
 

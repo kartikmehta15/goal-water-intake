@@ -5,10 +5,14 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
-      "README.md"
+      "README.md",
+      "functions/**"
     ]
   },
   "firestore": {
     "rules": "firestore.rules"
+  },
+  "functions": {
+    "source": "functions"
   }
 }
