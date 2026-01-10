@@ -230,7 +230,24 @@
             <section class="tab-content" id="tab-settings">
                 <h2>⚙️ Settings</h2>
                 
-                <div class="settings-card">
+                <!-- Power User Unlock Section -->
+                <div id="power-user-lock" class="power-user-unlock" style="display: none;">
+                    <h3>🔒 Email Notifications (Power Users Only)</h3>
+                    <p>Enter the access code to unlock email notification features</p>
+                    <div class="unlock-form">
+                        <input type="text" id="power-user-code-input" class="unlock-input" placeholder="Enter access code" />
+                        <button id="unlock-power-user-btn" class="unlock-btn">🔓 Unlock</button>
+                    </div>
+                    <div id="unlock-message" class="unlock-message" style="display: none;"></div>
+                </div>
+
+                <!-- Power User Unlocked Badge -->
+                <div id="power-user-unlocked" class="power-user-unlocked" style="display: none;">
+                    <h3>✅ Power User Unlocked</h3>
+                    <p>Email notifications are enabled for your account</p>
+                </div>
+                
+                <div class="settings-card" id="email-settings-card" style="display: none;">
                     <h3>📧 Email Notifications</h3>
                     <p class="settings-description">Receive email reminders to stay hydrated throughout the day</p>
                     
@@ -246,20 +263,151 @@
 
                     <div id="notification-settings" class="notification-settings" style="display: none;">
                         <div class="setting-item">
-                            <label class="setting-label">Reminder Times</label>
-                            <div class="reminder-times">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="reminder-11am" checked>
-                                    <span>11:00 AM - Morning Reminder</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="reminder-3pm" checked>
-                                    <span>3:00 PM - Afternoon Reminder</span>
-                                </label>
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="reminder-7pm" checked>
-                                    <span>7:00 PM - Evening Reminder</span>
-                                </label>
+                            <label class="setting-label">Reminder Times (Up to 5 Custom Reminders)</label>
+                            
+                            <!-- Reminder Slot 1 -->
+                            <div class="reminder-slot" id="reminder-slot-1">
+                                <div class="reminder-header">
+                                    <h4>Reminder 1</h4>
+                                    <div class="reminder-enable">
+                                        <input type="checkbox" id="reminder-1-enabled" checked>
+                                        <label for="reminder-1-enabled">Enabled</label>
+                                    </div>
+                                </div>
+                                <div class="reminder-time-options">
+                                    <label>Time:</label>
+                                    <select id="reminder-1-preset" class="time-preset-select">
+                                        <option value="">-- Select Preset --</option>
+                                        <option value="07:00">7:00 AM</option>
+                                        <option value="09:00" selected>9:00 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="12:00">12:00 PM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="15:00">3:00 PM</option>
+                                        <option value="17:00">5:00 PM</option>
+                                        <option value="19:00">7:00 PM</option>
+                                        <option value="21:00">9:00 PM</option>
+                                        <option value="custom">Custom Time</option>
+                                    </select>
+                                    <span class="time-divider">or</span>
+                                    <input type="time" id="reminder-1-custom" class="custom-time-input" disabled />
+                                </div>
+                            </div>
+
+                            <!-- Reminder Slot 2 -->
+                            <div class="reminder-slot" id="reminder-slot-2">
+                                <div class="reminder-header">
+                                    <h4>Reminder 2</h4>
+                                    <div class="reminder-enable">
+                                        <input type="checkbox" id="reminder-2-enabled" checked>
+                                        <label for="reminder-2-enabled">Enabled</label>
+                                    </div>
+                                </div>
+                                <div class="reminder-time-options">
+                                    <label>Time:</label>
+                                    <select id="reminder-2-preset" class="time-preset-select">
+                                        <option value="">-- Select Preset --</option>
+                                        <option value="07:00">7:00 AM</option>
+                                        <option value="09:00">9:00 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="12:00">12:00 PM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="15:00" selected>3:00 PM</option>
+                                        <option value="17:00">5:00 PM</option>
+                                        <option value="19:00">7:00 PM</option>
+                                        <option value="21:00">9:00 PM</option>
+                                        <option value="custom">Custom Time</option>
+                                    </select>
+                                    <span class="time-divider">or</span>
+                                    <input type="time" id="reminder-2-custom" class="custom-time-input" disabled />
+                                </div>
+                            </div>
+
+                            <!-- Reminder Slot 3 -->
+                            <div class="reminder-slot" id="reminder-slot-3">
+                                <div class="reminder-header">
+                                    <h4>Reminder 3</h4>
+                                    <div class="reminder-enable">
+                                        <input type="checkbox" id="reminder-3-enabled" checked>
+                                        <label for="reminder-3-enabled">Enabled</label>
+                                    </div>
+                                </div>
+                                <div class="reminder-time-options">
+                                    <label>Time:</label>
+                                    <select id="reminder-3-preset" class="time-preset-select">
+                                        <option value="">-- Select Preset --</option>
+                                        <option value="07:00">7:00 AM</option>
+                                        <option value="09:00">9:00 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="12:00">12:00 PM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="15:00">3:00 PM</option>
+                                        <option value="17:00">5:00 PM</option>
+                                        <option value="19:00" selected>7:00 PM</option>
+                                        <option value="21:00">9:00 PM</option>
+                                        <option value="custom">Custom Time</option>
+                                    </select>
+                                    <span class="time-divider">or</span>
+                                    <input type="time" id="reminder-3-custom" class="custom-time-input" disabled />
+                                </div>
+                            </div>
+
+                            <!-- Reminder Slot 4 -->
+                            <div class="reminder-slot disabled" id="reminder-slot-4">
+                                <div class="reminder-header">
+                                    <h4>Reminder 4</h4>
+                                    <div class="reminder-enable">
+                                        <input type="checkbox" id="reminder-4-enabled">
+                                        <label for="reminder-4-enabled">Enabled</label>
+                                    </div>
+                                </div>
+                                <div class="reminder-time-options">
+                                    <label>Time:</label>
+                                    <select id="reminder-4-preset" class="time-preset-select" disabled>
+                                        <option value="">-- Select Preset --</option>
+                                        <option value="07:00">7:00 AM</option>
+                                        <option value="09:00">9:00 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="12:00" selected>12:00 PM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="15:00">3:00 PM</option>
+                                        <option value="17:00">5:00 PM</option>
+                                        <option value="19:00">7:00 PM</option>
+                                        <option value="21:00">9:00 PM</option>
+                                        <option value="custom">Custom Time</option>
+                                    </select>
+                                    <span class="time-divider">or</span>
+                                    <input type="time" id="reminder-4-custom" class="custom-time-input" disabled />
+                                </div>
+                            </div>
+
+                            <!-- Reminder Slot 5 -->
+                            <div class="reminder-slot disabled" id="reminder-slot-5">
+                                <div class="reminder-header">
+                                    <h4>Reminder 5</h4>
+                                    <div class="reminder-enable">
+                                        <input type="checkbox" id="reminder-5-enabled">
+                                        <label for="reminder-5-enabled">Enabled</label>
+                                    </div>
+                                </div>
+                                <div class="reminder-time-options">
+                                    <label>Time:</label>
+                                    <select id="reminder-5-preset" class="time-preset-select" disabled>
+                                        <option value="">-- Select Preset --</option>
+                                        <option value="07:00">7:00 AM</option>
+                                        <option value="09:00">9:00 AM</option>
+                                        <option value="11:00">11:00 AM</option>
+                                        <option value="12:00">12:00 PM</option>
+                                        <option value="14:00">2:00 PM</option>
+                                        <option value="15:00">3:00 PM</option>
+                                        <option value="17:00">5:00 PM</option>
+                                        <option value="19:00">7:00 PM</option>
+                                        <option value="21:00" selected>9:00 PM</option>
+                                        <option value="custom">Custom Time</option>
+                                    </select>
+                                    <span class="time-divider">or</span>
+                                    <input type="time" id="reminder-5-custom" class="custom-time-input" disabled />
+                                </div>
                             </div>
                         </div>
 

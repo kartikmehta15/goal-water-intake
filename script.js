@@ -952,6 +952,7 @@ class WaterIntakeTracker {
     initializeSettings() {
         this.loadUserSettings();
         this.setupSettingsEventListeners();
+        this.setupReminderPickers();
         this.populateTimezones();
     }
 
@@ -1028,6 +1029,24 @@ class WaterIntakeTracker {
                 this.sendTestEmail();
             });
         }
+
+        // Power user unlock button
+        const unlockBtn = document.getElementById('unlock-power-user-btn');
+        if (unlockBtn) {
+            unlockBtn.addEventListener('click', () => {
+                this.unlockPowerUser();
+            });
+        }
+
+        // Allow Enter key to unlock
+        const codeInput = document.getElementById('power-user-code-input');
+        if (codeInput) {
+            codeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.unlockPowerUser();
+                }
+            });
+        }
     }
 
     async loadUserSettings() {
@@ -1037,22 +1056,49 @@ class WaterIntakeTracker {
             if (userDoc.exists) {
                 const settings = userDoc.data();
                 
-                // Load notification settings
-                document.getElementById('email-notifications-enabled').checked = settings.emailNotificationsEnabled || false;
-                document.getElementById('notification-settings').style.display = settings.emailNotificationsEnabled ? 'block' : 'none';
+                // Check power user status
+                const isPowerUser = settings.powerUserVerified || false;
+                this.showPowerUserStatus(isPowerUser);
                 
-                document.getElementById('reminder-11am').checked = settings.reminder11am !== false;
-                document.getElementById('reminder-3pm').checked = settings.reminder3pm !== false;
-                document.getElementById('reminder-7pm').checked = settings.reminder7pm !== false;
-                
-                if (settings.timezone) {
-                    document.getElementById('user-timezone').value = settings.timezone;
+                if (isPowerUser) {
+                    // Load notification settings
+                    document.getElementById('email-notifications-enabled').checked = settings.notificationsEnabled || false;
+                    document.getElementById('notification-settings').style.display = settings.notificationsEnabled ? 'block' : 'none';
+                    
+                    // Load 5 reminder slots
+                    for (let i = 1; i <= 5; i++) {
+                        const reminderKey = `reminder${i}`;
+                        const reminder = settings[reminderKey];
+                        
+                        if (reminder) {
+                            document.getElementById(`reminder-${i}-enabled`).checked = reminder.enabled || false;
+                            
+                            if (reminder.preset && reminder.preset !== 'custom') {
+                                document.getElementById(`reminder-${i}-preset`).value = reminder.preset;
+                                document.getElementById(`reminder-${i}-custom`).disabled = true;
+                            } else if (reminder.custom) {
+                                document.getElementById(`reminder-${i}-preset`).value = 'custom';
+                                document.getElementById(`reminder-${i}-custom`).value = reminder.custom;
+                                document.getElementById(`reminder-${i}-custom`).disabled = false;
+                            }
+                            
+                            // Update slot appearance
+                            this.updateReminderSlot(i);
+                        }
+                    }
+                    
+                    if (settings.timezone) {
+                        document.getElementById('user-timezone').value = settings.timezone;
+                    }
                 }
                 
                 // Load account settings
                 if (settings.defaultDailyGoal) {
                     document.getElementById('daily-goal-setting').value = settings.defaultDailyGoal;
                 }
+            } else {
+                // New user - show power user lock
+                this.showPowerUserStatus(false);
             }
             
             // Set test email address
@@ -1062,21 +1108,32 @@ class WaterIntakeTracker {
             }
         } catch (error) {
             console.error('Error loading user settings:', error);
+            this.showPowerUserStatus(false);
         }
     }
 
     async saveUserSettings() {
         try {
             const settings = {
-                emailNotificationsEnabled: document.getElementById('email-notifications-enabled').checked,
-                reminder11am: document.getElementById('reminder-11am').checked,
-                reminder3pm: document.getElementById('reminder-3pm').checked,
-                reminder7pm: document.getElementById('reminder-7pm').checked,
+                notificationsEnabled: document.getElementById('email-notifications-enabled').checked,
                 timezone: document.getElementById('user-timezone').value,
                 email: this.userEmail,
                 userId: this.userId,
                 updatedAt: new Date()
             };
+
+            // Save all 5 reminder slots
+            for (let i = 1; i <= 5; i++) {
+                const enabled = document.getElementById(`reminder-${i}-enabled`).checked;
+                const preset = document.getElementById(`reminder-${i}-preset`).value;
+                const custom = document.getElementById(`reminder-${i}-custom`).value;
+                
+                settings[`reminder${i}`] = {
+                    enabled: enabled,
+                    preset: preset === 'custom' ? 'custom' : preset,
+                    custom: preset === 'custom' ? custom : ''
+                };
+            }
 
             await db.collection('users').doc(this.userId).set(settings, { merge: true });
             
@@ -1155,6 +1212,123 @@ class WaterIntakeTracker {
         setTimeout(() => {
             messageEl.style.display = 'none';
         }, 5000);
+    }
+
+    // Power User Unlock Methods
+    async unlockPowerUser() {
+        const codeInput = document.getElementById('power-user-code-input');
+        const unlockBtn = document.getElementById('unlock-power-user-btn');
+        const messageEl = document.getElementById('unlock-message');
+        const code = codeInput.value.trim();
+
+        if (!code) {
+            this.showUnlockMessage('Please enter an access code', 'error');
+            return;
+        }
+
+        // Show loading state
+        unlockBtn.disabled = true;
+        unlockBtn.textContent = '⏳ Verifying...';
+        messageEl.style.display = 'none';
+
+        try {
+            // Call Firebase HTTP Callable Function to verify code
+            const verifyCodeFunc = firebase.functions().httpsCallable('verifyPowerUserCode');
+            const result = await verifyCodeFunc({ code: code });
+
+            if (result.data.verified) {
+                // Save power user status to Firestore
+                await db.collection('users').doc(this.userId).set({
+                    powerUserVerified: true,
+                    powerUserUnlockedAt: new Date()
+                }, { merge: true });
+
+                // Show success and update UI
+                this.showUnlockMessage('✅ Access granted! You are now a power user.', 'success');
+                
+                setTimeout(() => {
+                    this.showPowerUserStatus(true);
+                    this.showSuccess('Power user features unlocked!');
+                }, 1500);
+            } else {
+                this.showUnlockMessage('❌ Invalid access code. Please try again.', 'error');
+            }
+        } catch (error) {
+            console.error('Power user unlock error:', error);
+            this.showUnlockMessage('❌ Failed to verify code. Please try again.', 'error');
+        } finally {
+            // Restore button state
+            unlockBtn.disabled = false;
+            unlockBtn.textContent = '🔓 Unlock';
+            codeInput.value = '';
+        }
+    }
+
+    showUnlockMessage(message, type) {
+        const messageEl = document.getElementById('unlock-message');
+        messageEl.textContent = message;
+        messageEl.className = `unlock-message ${type}`;
+        messageEl.style.display = 'block';
+    }
+
+    showPowerUserStatus(isPowerUser) {
+        const lockSection = document.getElementById('power-user-lock');
+        const unlockedSection = document.getElementById('power-user-unlocked');
+        const emailSettingsCard = document.getElementById('email-settings-card');
+
+        if (isPowerUser) {
+            lockSection.style.display = 'none';
+            unlockedSection.style.display = 'block';
+            emailSettingsCard.style.display = 'block';
+        } else {
+            lockSection.style.display = 'block';
+            unlockedSection.style.display = 'none';
+            emailSettingsCard.style.display = 'none';
+        }
+    }
+
+    // Setup reminder picker event listeners
+    setupReminderPickers() {
+        for (let i = 1; i <= 5; i++) {
+            const enabledCheckbox = document.getElementById(`reminder-${i}-enabled`);
+            const presetSelect = document.getElementById(`reminder-${i}-preset`);
+            const customInput = document.getElementById(`reminder-${i}-custom`);
+
+            // Handle enable/disable
+            enabledCheckbox.addEventListener('change', () => {
+                this.updateReminderSlot(i);
+            });
+
+            // Handle preset selection
+            presetSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'custom') {
+                    customInput.disabled = false;
+                    customInput.focus();
+                } else {
+                    customInput.disabled = true;
+                    customInput.value = '';
+                }
+            });
+        }
+    }
+
+    updateReminderSlot(slotNumber) {
+        const slot = document.getElementById(`reminder-slot-${slotNumber}`);
+        const enabled = document.getElementById(`reminder-${slotNumber}-enabled`).checked;
+        const presetSelect = document.getElementById(`reminder-${slotNumber}-preset`);
+        const customInput = document.getElementById(`reminder-${slotNumber}-custom`);
+
+        if (enabled) {
+            slot.classList.remove('disabled');
+            presetSelect.disabled = false;
+            if (presetSelect.value === 'custom') {
+                customInput.disabled = false;
+            }
+        } else {
+            slot.classList.add('disabled');
+            presetSelect.disabled = true;
+            customInput.disabled = true;
+        }
     }
 }
 
