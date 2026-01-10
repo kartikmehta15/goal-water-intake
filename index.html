@@ -248,7 +248,31 @@
                 </div>
                 
                 <div class="settings-card" id="email-settings-card" style="display: none;">
-                    <h3>📧 Email Notifications</h3>
+                    <!-- EmailJS Configuration Section -->
+                    <h3>⚙️ EmailJS Configuration</h3>
+                    <div class="emailjs-config">
+                        <p class="config-note">⚠️ <strong>Required:</strong> Set up your EmailJS account first (see guide below)</p>
+                        
+                        <div class="config-field">
+                            <label for="emailjs-service-id">Service ID:</label>
+                            <input type="text" id="emailjs-service-id" class="config-input" placeholder="service_xxxxxxx" />
+                        </div>
+                        
+                        <div class="config-field">
+                            <label for="emailjs-template-id">Template ID:</label>
+                            <input type="text" id="emailjs-template-id" class="config-input" placeholder="template_xxxxxxx" />
+                        </div>
+                        
+                        <div class="config-field">
+                            <label for="emailjs-public-key">Public Key:</label>
+                            <input type="text" id="emailjs-public-key" class="config-input" placeholder="public_xxxxxxx" />
+                        </div>
+                        
+                        <button id="save-emailjs-config" class="btn-secondary">💾 Save EmailJS Configuration</button>
+                        <div class="config-message" id="config-message"></div>
+                    </div>
+                    
+                    <h3 style="margin-top: 30px;">📧 Email Notifications</h3>
                     <p class="settings-description">Receive email reminders to stay hydrated throughout the day</p>
                     
                     <div class="setting-item">
@@ -436,6 +460,54 @@
                         </button>
                         <div class="test-message" id="test-message"></div>
                     </div>
+                    
+                    <!-- EmailJS Setup Guide -->
+                    <div class="settings-group" style="margin-top: 30px;">
+                        <h3>📖 EmailJS Setup Guide</h3>
+                        <ol class="setup-steps">
+                            <li>Go to <a href="https://www.emailjs.com" target="_blank" rel="noopener">EmailJS.com</a> and sign up (free, no credit card required)</li>
+                            <li>Add Gmail service and authorize your account</li>
+                            <li>Create an email template with the variables below</li>
+                            <li>Copy your Service ID, Template ID, and Public Key</li>
+                            <li>Paste them in the configuration fields above</li>
+                            <li>Click "Save EmailJS Configuration"</li>
+                            <li>Enable notifications and set reminder times</li>
+                            <li>Click "Send Test Email" to verify!</li>
+                        </ol>
+                        
+                        <details class="template-details">
+                            <summary><strong>📧 Email Template Example</strong></summary>
+                            <div class="template-example">
+                                <p><strong>Subject:</strong></p>
+                                <pre>{{reminder_time}} - Time to Hydrate! 💧</pre>
+                                
+                                <p><strong>Body:</strong></p>
+                                <pre>Hi {{to_name}}! 👋
+
+This is your {{reminder_time}} reminder to drink water!
+
+Today's Progress:
+🚰 Current: {{current_amount}} ml
+🎯 Goal: {{goal_amount}} ml
+📊 Progress: {{percentage}}%
+
+Stay hydrated! 💪
+
+<a href="{{website_url}}">Update your intake</a></pre>
+                            </div>
+                        </details>
+                        
+                        <div class="emailjs-features">
+                            <h4>✨ Why EmailJS?</h4>
+                            <ul>
+                                <li>✅ <strong>FREE</strong> - 200 emails/month (enough for 10+ users)</li>
+                                <li>✅ <strong>No credit card required</strong></li>
+                                <li>✅ <strong>No backend needed</strong> - works on GitHub Pages</li>
+                                <li>✅ <strong>5 minute setup</strong></li>
+                                <li>✅ <strong>$0 cost forever</strong></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="settings-card">
@@ -476,6 +548,26 @@
         <button class="toast-close" id="toast-close" aria-label="Close">×</button>
     </div>
 
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        // EmailJS initialization - will be configured by user in settings
+        (function() {
+            // Check if EmailJS config exists in localStorage
+            const emailjsConfig = localStorage.getItem('emailjs_config');
+            if (emailjsConfig) {
+                try {
+                    const config = JSON.parse(emailjsConfig);
+                    if (config.publicKey) {
+                        emailjs.init(config.publicKey);
+                    }
+                } catch (error) {
+                    console.error('Failed to initialize EmailJS:', error);
+                }
+            }
+        })();
+    </script>
+    
     <script src="auth.js"></script>
     <script src="script.js"></script>
 </body>

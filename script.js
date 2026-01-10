@@ -1,4 +1,9 @@
 // Water Intake Tracker Application
+
+// Power User Code - NOT to be committed to repository in production
+// This should be set via environment variable or configuration
+const POWER_USER_CODE = 'WATER-HYDRO-2026-PWR9';
+
 class WaterIntakeTracker {
     constructor() {
         this.currentDate = new Date();
@@ -87,6 +92,158 @@ class WaterIntakeTracker {
         this.updateMonthSummary();
         this.initializeExportDates();
         this.initializeSettings();
+        
+        // Check for scheduled reminders on app load
+        this.checkScheduledReminders();
+        
+        // Check reminders every 5 minutes while app is open
+        setInterval(() => this.checkScheduledReminders(), 5 * 60 * 1000);
+    }
+    
+    // EmailJS Integration Methods
+    
+    getEmailJSConfig() {
+        const configStr = localStorage.getItem('emailjs_config');
+        if (configStr) {
+            try {
+                return JSON.parse(configStr);
+            } catch (error) {
+                console.error('Failed to parse EmailJS config:', error);
+            }
+        }
+        return null;
+    }
+    
+    getCurrentProgress() {
+        const dateKey = this.getDateKey(new Date());
+        const dayData = this.data[dateKey] || { intake: 0, goal: this.defaultGoal };
+        const intake = dayData.intake || 0;
+        const goal = dayData.goal || this.defaultGoal;
+        const percentage = Math.round((intake / goal) * 100);
+        
+        return {
+            amount: intake,
+            goal: goal,
+            percentage: percentage
+        };
+    }
+    
+    async sendEmailReminder(reminderTime) {
+        const config = this.getEmailJSConfig();
+        if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
+            console.error('EmailJS not configured');
+            return false;
+        }
+        
+        // Re-initialize EmailJS with current config
+        try {
+            emailjs.init(config.publicKey);
+        } catch (error) {
+            console.error('Failed to initialize EmailJS:', error);
+            return false;
+        }
+        
+        const progress = this.getCurrentProgress();
+        
+        const templateParams = {
+            to_email: this.userEmail,
+            to_name: this.userEmail.split('@')[0] || 'there',
+            reminder_time: reminderTime,
+            current_amount: progress.amount,
+            goal_amount: progress.goal,
+            percentage: progress.percentage,
+            website_url: window.location.origin + window.location.pathname
+        };
+        
+        try {
+            const response = await emailjs.send(
+                config.serviceId,
+                config.templateId,
+                templateParams
+            );
+            console.log('Email sent successfully:', response);
+            return true;
+        } catch (error) {
+            console.error('Email error:', error);
+            return false;
+        }
+    }
+    
+    async checkScheduledReminders() {
+        if (!this.userEmail) return;
+        
+        // Check if EmailJS is configured
+        const config = this.getEmailJSConfig();
+        if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
+            return;
+        }
+        
+        try {
+            const userDoc = await db.collection('users').doc(this.userId).get();
+            if (!userDoc.exists) return;
+            
+            const settings = userDoc.data();
+            if (!settings || !settings.notificationsEnabled) return;
+            
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            const today = now.toISOString().split('T')[0];
+            
+            // Get last check time from localStorage
+            const lastCheck = localStorage.getItem('lastReminderCheck');
+            const lastCheckDate = lastCheck ? new Date(lastCheck) : new Date(0);
+            
+            // Check each reminder (1-5)
+            for (let i = 1; i <= 5; i++) {
+                const reminderKey = `reminder${i}`;
+                const reminder = settings[reminderKey];
+                
+                if (!reminder || !reminder.enabled) continue;
+                
+                // Parse reminder time
+                let reminderHour, reminderMinute;
+                if (reminder.preset === 'custom' && reminder.custom) {
+                    const [hour, minute] = reminder.custom.split(':');
+                    reminderHour = parseInt(hour);
+                    reminderMinute = parseInt(minute);
+                } else if (reminder.preset) {
+                    const [hour, minute] = reminder.preset.split(':');
+                    reminderHour = parseInt(hour);
+                    reminderMinute = parseInt(minute) || 0;
+                } else {
+                    continue;
+                }
+                
+                const reminderTime = new Date(now);
+                reminderTime.setHours(reminderHour, reminderMinute, 0, 0);
+                
+                // If reminder time is between last check and now (or just passed)
+                const timeDiff = now - reminderTime;
+                if (timeDiff >= 0 && timeDiff < 5 * 60 * 1000 && reminderTime > lastCheckDate) {
+                    // Check if already sent today
+                    const sentKey = `reminder_sent_${reminderHour}_${reminderMinute}`;
+                    const sentToday = localStorage.getItem(sentKey);
+                    
+                    if (sentToday !== today) {
+                        // Send reminder
+                        const timeLabel = `${String(reminderHour).padStart(2, '0')}:${String(reminderMinute).padStart(2, '0')}`;
+                        const success = await this.sendEmailReminder(timeLabel);
+                        
+                        if (success) {
+                            // Mark as sent
+                            localStorage.setItem(sentKey, today);
+                            console.log(`Reminder sent at ${timeLabel}`);
+                        }
+                    }
+                }
+            }
+            
+            // Update last check time
+            localStorage.setItem('lastReminderCheck', now.toISOString());
+        } catch (error) {
+            console.error('Error checking scheduled reminders:', error);
+        }
     }
 
     setupUserProfile() {
@@ -1047,6 +1204,17 @@ class WaterIntakeTracker {
                 }
             });
         }
+        
+        // Save EmailJS configuration button
+        const saveConfigBtn = document.getElementById('save-emailjs-config');
+        if (saveConfigBtn) {
+            saveConfigBtn.addEventListener('click', () => {
+                this.saveEmailJSConfig();
+            });
+        }
+        
+        // Load EmailJS configuration
+        this.loadEmailJSConfig();
     }
 
     async loadUserSettings() {
@@ -1176,25 +1344,31 @@ class WaterIntakeTracker {
         messageEl.style.display = 'none';
         
         try {
-            // Call Firebase HTTP Callable Function
-            const sendTestEmailFunc = firebase.functions().httpsCallable('sendTestEmail');
-            const result = await sendTestEmailFunc();
+            // Check if EmailJS is configured
+            const config = this.getEmailJSConfig();
+            if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
+                this.showTestMessage('❌ Please configure EmailJS settings first', 'error');
+                return;
+            }
             
-            // Show success message
-            this.showTestMessage(
-                `✅ ${result.data.message} Check your inbox (and spam folder)!`,
-                'success'
-            );
+            // Send test email
+            const success = await this.sendEmailReminder('TEST');
+            
+            if (success) {
+                this.showTestMessage(
+                    '✅ Test email sent successfully! Check your inbox (and spam folder).',
+                    'success'
+                );
+            } else {
+                this.showTestMessage(
+                    '❌ Failed to send test email. Please check your EmailJS configuration.',
+                    'error'
+                );
+            }
             
         } catch (error) {
             console.error('Test email error:', error);
-            
-            let errorMsg = 'Failed to send test email.';
-            if (error.message) {
-                errorMsg += ' ' + error.message;
-            }
-            
-            this.showTestMessage(`❌ ${errorMsg}`, 'error');
+            this.showTestMessage(`❌ Error: ${error.message}`, 'error');
             
         } finally {
             // Restore button state
@@ -1207,11 +1381,12 @@ class WaterIntakeTracker {
         const messageEl = document.getElementById('test-message');
         messageEl.textContent = message;
         messageEl.className = `test-message ${type}`;
+        messageEl.style.display = 'block';
         
-        // Auto-hide after 5 seconds
+        // Auto-hide after 8 seconds
         setTimeout(() => {
             messageEl.style.display = 'none';
-        }, 5000);
+        }, 8000);
     }
 
     // Power User Unlock Methods
@@ -1232,11 +1407,8 @@ class WaterIntakeTracker {
         messageEl.style.display = 'none';
 
         try {
-            // Call Firebase HTTP Callable Function to verify code
-            const verifyCodeFunc = firebase.functions().httpsCallable('verifyPowerUserCode');
-            const result = await verifyCodeFunc({ code: code });
-
-            if (result.data.verified) {
+            // Verify code against constant (frontend verification)
+            if (code === POWER_USER_CODE) {
                 // Save power user status to Firestore
                 await db.collection('users').doc(this.userId).set({
                     powerUserVerified: true,
@@ -1262,6 +1434,61 @@ class WaterIntakeTracker {
             unlockBtn.textContent = '🔓 Unlock';
             codeInput.value = '';
         }
+    }
+    
+    saveEmailJSConfig() {
+        const serviceId = document.getElementById('emailjs-service-id').value.trim();
+        const templateId = document.getElementById('emailjs-template-id').value.trim();
+        const publicKey = document.getElementById('emailjs-public-key').value.trim();
+        
+        if (!serviceId || !templateId || !publicKey) {
+            this.showConfigMessage('Please fill in all configuration fields', 'error');
+            return;
+        }
+        
+        const config = {
+            serviceId: serviceId,
+            templateId: templateId,
+            publicKey: publicKey
+        };
+        
+        try {
+            localStorage.setItem('emailjs_config', JSON.stringify(config));
+            
+            // Re-initialize EmailJS
+            emailjs.init(publicKey);
+            
+            this.showConfigMessage('✅ EmailJS configuration saved successfully!', 'success');
+        } catch (error) {
+            console.error('Failed to save EmailJS config:', error);
+            this.showConfigMessage('❌ Failed to save configuration', 'error');
+        }
+    }
+    
+    loadEmailJSConfig() {
+        const config = this.getEmailJSConfig();
+        if (config) {
+            if (config.serviceId) {
+                document.getElementById('emailjs-service-id').value = config.serviceId;
+            }
+            if (config.templateId) {
+                document.getElementById('emailjs-template-id').value = config.templateId;
+            }
+            if (config.publicKey) {
+                document.getElementById('emailjs-public-key').value = config.publicKey;
+            }
+        }
+    }
+    
+    showConfigMessage(message, type) {
+        const messageEl = document.getElementById('config-message');
+        messageEl.textContent = message;
+        messageEl.className = `config-message ${type}`;
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            messageEl.className = 'config-message';
+        }, 5000);
     }
 
     showUnlockMessage(message, type) {
