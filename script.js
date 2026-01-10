@@ -1,5 +1,8 @@
 // Water Intake Tracker Application
 
+// Admin email - Replace with your actual email address
+const ADMIN_EMAIL = 'kartikmehta15@gmail.com';
+
 // Power User Code - Frontend verification only
 // NOTE: In a production environment, this should be verified server-side.
 // Since we're using a static hosting (GitHub Pages) without backend,
@@ -22,6 +25,8 @@ class WaterIntakeTracker {
         this.unsubscribe = null; // For Firestore listener cleanup
         this.previousPercentage = 0; // Track previous percentage for confetti
         this.emailjsInitialized = false; // Track EmailJS initialization state
+        this.isAdmin = false; // Track if current user is admin
+        this.emailConfig = null; // Global email configuration from Firestore
         this.creatures = [
             { emoji: '🌵', name: 'Cactus' },
             { emoji: '🌻', name: 'Sunflower' },
@@ -90,27 +95,180 @@ class WaterIntakeTracker {
         });
     }
 
-    init() {
-        this.setupUserProfile();
-        this.setupTabNavigation();
-        this.setupQuickAddButtons();
-        this.setupEventListeners();
-        this.updateDateSelector();
-        this.updateDisplay();
-        this.renderCalendar();
-        this.updateStatistics();
-        this.updateMonthSummary();
-        this.initializeExportDates();
-        this.initializeSettings();
+    async init() {
+        try {
+            this.setupUserProfile();
+            this.setupTabNavigation();
+            this.setupQuickAddButtons();
+            this.setupEventListeners();
+            
+            // Check if user is admin
+            await this.checkAdminStatus();
+            
+            // Load email configuration from Firestore
+            await this.loadEmailConfig();
+            
+            this.updateDateSelector();
+            this.updateDisplay();
+            this.renderCalendar();
+            this.updateStatistics();
+            this.updateMonthSummary();
+            this.initializeExportDates();
+            await this.initializeSettings();
+            
+            // Initialize EmailJS if configured
+            this.initializeEmailJS();
+            
+            // Check for scheduled reminders on app load
+            this.checkScheduledReminders();
+            
+            // Check reminders every 5 minutes while app is open
+            setInterval(() => this.checkScheduledReminders(), REMINDER_CHECK_INTERVAL_MS);
+        } catch (error) {
+            console.error('Initialization error:', error);
+            this.showToast('error', 'Error', 'Failed to initialize app. Please refresh the page.');
+        }
+    }
+    
+    // Admin Methods
+    
+    // Check if current user is admin
+    async checkAdminStatus() {
+        if (!this.userEmail) return;
         
-        // Initialize EmailJS if configured
-        this.initializeEmailJS();
+        this.isAdmin = (this.userEmail === ADMIN_EMAIL);
         
-        // Check for scheduled reminders on app load
-        this.checkScheduledReminders();
+        const adminSection = document.getElementById('admin-section');
+        if (adminSection && this.isAdmin) {
+            adminSection.style.display = 'block';
+            await this.loadAdminConfig();
+        }
+    }
+    
+    // Load global email configuration from Firestore
+    async loadEmailConfig() {
+        try {
+            const configDoc = await db.collection('config').doc('emailjs').get();
+            
+            if (configDoc.exists) {
+                this.emailConfig = configDoc.data();
+                
+                const statusEl = document.getElementById('email-system-status');
+                const userSettingsEl = document.getElementById('user-notification-settings');
+                
+                if (this.emailConfig.enabled) {
+                    if (statusEl) {
+                        statusEl.innerHTML = '<p class="status-success">✅ Email system is active. Configure your reminders below.</p>';
+                    }
+                    if (userSettingsEl) {
+                        userSettingsEl.style.display = 'block';
+                    }
+                } else {
+                    if (statusEl) {
+                        statusEl.innerHTML = '<p class="status-warning">⚠️ Email system is currently disabled by administrator.</p>';
+                    }
+                }
+            } else {
+                const statusEl = document.getElementById('email-system-status');
+                if (statusEl) {
+                    statusEl.innerHTML = '<p class="status-info">ℹ️ Email system not configured yet. Contact administrator.</p>';
+                }
+            }
+        } catch (error) {
+            console.error('Error loading email config:', error);
+        }
+    }
+    
+    // Admin: Load admin configuration
+    async loadAdminConfig() {
+        try {
+            const configDoc = await db.collection('config').doc('emailjs').get();
+            
+            if (configDoc.exists) {
+                const config = configDoc.data();
+                
+                // Populate admin form
+                const serviceIdEl = document.getElementById('admin-emailjs-service-id');
+                const templateIdEl = document.getElementById('admin-emailjs-template-id');
+                const publicKeyEl = document.getElementById('admin-emailjs-public-key');
+                const enabledEl = document.getElementById('admin-emailjs-enabled');
+                
+                if (serviceIdEl) serviceIdEl.value = config.serviceId || '';
+                if (templateIdEl) templateIdEl.value = config.templateId || '';
+                if (publicKeyEl) publicKeyEl.value = config.publicKey || '';
+                if (enabledEl) enabledEl.checked = config.enabled || false;
+                
+                // Update status display
+                const statusEl = document.getElementById('config-status');
+                const adminEl = document.getElementById('config-admin');
+                const updatedEl = document.getElementById('config-updated');
+                
+                if (statusEl) statusEl.textContent = config.enabled ? '✅ Enabled' : '❌ Disabled';
+                if (adminEl) adminEl.textContent = config.configuredBy || '-';
+                if (updatedEl && config.lastUpdated) {
+                    updatedEl.textContent = new Date(config.lastUpdated.toDate()).toLocaleString();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading admin config:', error);
+        }
+    }
+    
+    // Admin: Save admin configuration
+    async saveAdminConfig() {
+        if (!this.isAdmin) {
+            alert('You must be an administrator to change this configuration.');
+            return;
+        }
         
-        // Check reminders every 5 minutes while app is open
-        setInterval(() => this.checkScheduledReminders(), REMINDER_CHECK_INTERVAL_MS);
+        const serviceId = document.getElementById('admin-emailjs-service-id').value.trim();
+        const templateId = document.getElementById('admin-emailjs-template-id').value.trim();
+        const publicKey = document.getElementById('admin-emailjs-public-key').value.trim();
+        const enabled = document.getElementById('admin-emailjs-enabled').checked;
+        
+        if (!serviceId || !templateId || !publicKey) {
+            this.showAdminMessage('Please fill in all configuration fields', 'error');
+            return;
+        }
+        
+        try {
+            await db.collection('config').doc('emailjs').set({
+                serviceId: serviceId,
+                templateId: templateId,
+                publicKey: publicKey,
+                enabled: enabled,
+                configuredBy: this.userEmail,
+                configuredAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            this.showAdminMessage('✅ Configuration saved successfully! All users can now use email reminders.', 'success');
+            
+            // Reload config
+            await this.loadEmailConfig();
+            await this.loadAdminConfig();
+            
+            // Initialize EmailJS with new config
+            this.emailjsInitialized = false; // Reset initialization state
+            this.initializeEmailJS();
+            
+        } catch (error) {
+            console.error('Error saving admin config:', error);
+            this.showAdminMessage('❌ Failed to save configuration: ' + error.message, 'error');
+        }
+    }
+    
+    showAdminMessage(message, type) {
+        const messageEl = document.getElementById('admin-config-message');
+        if (messageEl) {
+            messageEl.textContent = message;
+            messageEl.className = `admin-config-message ${type}`;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 5000);
+        }
     }
     
     // EmailJS Integration Methods
@@ -121,13 +279,16 @@ class WaterIntakeTracker {
             return true;
         }
         
-        const config = this.getEmailJSConfig();
+        // Use Firestore config if available, otherwise fall back to localStorage for backward compatibility
+        const config = this.emailConfig || this.getEmailJSConfig();
         if (config && config.publicKey) {
             try {
-                emailjs.init(config.publicKey);
-                this.emailjsInitialized = true;
-                console.log('EmailJS initialized successfully');
-                return true;
+                if (typeof emailjs !== 'undefined') {
+                    emailjs.init(config.publicKey);
+                    this.emailjsInitialized = true;
+                    console.log('EmailJS initialized successfully');
+                    return true;
+                }
             } catch (error) {
                 console.error('Failed to initialize EmailJS:', error);
                 return false;
@@ -137,6 +298,7 @@ class WaterIntakeTracker {
     }
     
     getEmailJSConfig() {
+        // Backward compatibility: check localStorage for old configs
         const configStr = localStorage.getItem('emailjs_config');
         if (configStr) {
             try {
@@ -163,9 +325,16 @@ class WaterIntakeTracker {
     }
     
     async sendEmailReminder(reminderTime) {
-        const config = this.getEmailJSConfig();
+        // Use Firestore config if available, otherwise fall back to localStorage
+        const config = this.emailConfig || this.getEmailJSConfig();
         if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
             console.error('EmailJS not configured');
+            return false;
+        }
+        
+        // Check if email system is enabled (for Firestore config)
+        if (this.emailConfig && !this.emailConfig.enabled) {
+            console.error('Email system is disabled by administrator');
             return false;
         }
         
@@ -201,9 +370,14 @@ class WaterIntakeTracker {
     async checkScheduledReminders() {
         if (!this.userEmail) return;
         
-        // Check if EmailJS is configured
-        const config = this.getEmailJSConfig();
+        // Check if EmailJS is configured (Firestore or localStorage)
+        const config = this.emailConfig || this.getEmailJSConfig();
         if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
+            return;
+        }
+        
+        // Check if email system is enabled (for Firestore config)
+        if (this.emailConfig && !this.emailConfig.enabled) {
             return;
         }
         
@@ -697,54 +871,71 @@ class WaterIntakeTracker {
     }
 
     updateDisplay() {
-        const dateKey = this.getDateKey(this.selectedDate);
-        const dayData = this.data[dateKey] || { intake: 0, goal: this.defaultGoal };
-        const intake = dayData.intake || 0;
-        const goal = dayData.goal || this.defaultGoal;
-        const percentage = Math.round((intake / goal) * 100);
+        try {
+            const dateKey = this.getDateKey(this.selectedDate);
+            const dayData = this.data[dateKey] || { intake: 0, goal: this.defaultGoal };
+            const intake = dayData.intake || 0;
+            const goal = dayData.goal || this.defaultGoal;
+            const percentage = Math.round((intake / goal) * 100);
 
-        // Update form fields
-        document.getElementById('water-amount').value = intake;
-        document.getElementById('daily-goal').value = goal;
-        document.getElementById('current-intake').textContent = intake;
-        document.getElementById('goal-display').textContent = goal;
-        document.getElementById('percentage-display').textContent = percentage;
+            // Update form fields with null checks
+            const waterAmountEl = document.getElementById('water-amount');
+            const dailyGoalEl = document.getElementById('daily-goal');
+            const currentIntakeEl = document.getElementById('current-intake');
+            const goalDisplayEl = document.getElementById('goal-display');
+            const percentageDisplayEl = document.getElementById('percentage-display');
+            
+            if (waterAmountEl) waterAmountEl.value = intake;
+            if (dailyGoalEl) dailyGoalEl.value = goal;
+            if (currentIntakeEl) currentIntakeEl.textContent = intake;
+            if (goalDisplayEl) goalDisplayEl.textContent = goal;
+            if (percentageDisplayEl) percentageDisplayEl.textContent = percentage;
 
-        // Update circular progress
-        this.updateCircularProgress(percentage);
-        
-        // Update remaining intake
-        const remaining = Math.max(0, goal - intake);
-        const remainingEl = document.getElementById('remaining-intake');
-        if (remainingEl) {
-            remainingEl.textContent = remaining;
-        }
-        
-        // Show confetti if goal reached
-        if (percentage >= 100 && this.previousPercentage < 100) {
-            this.showConfetti();
-        }
-        this.previousPercentage = percentage;
+            // Update circular progress
+            this.updateCircularProgress(percentage);
+            
+            // Update remaining intake
+            const remaining = Math.max(0, goal - intake);
+            const remainingEl = document.getElementById('remaining-intake');
+            if (remainingEl) {
+                remainingEl.textContent = remaining;
+            }
+            
+            // Show confetti if goal reached
+            if (percentage >= 100 && this.previousPercentage < 100) {
+                this.showConfetti();
+            }
+            this.previousPercentage = percentage;
 
-        // Update creature display
-        const creature = this.getCreatureForDate(this.selectedDate);
-        const isToday = this.selectedDate.toDateString() === new Date().toDateString();
-        const companionText = isToday ? "Today's companion" : "Day's companion";
-        document.getElementById('creature-name').textContent = `${companionText}: ${creature.name}`;
-        
-        const creatureDisplay = document.getElementById('creature-display');
-        creatureDisplay.innerHTML = `<span>${creature.emoji}</span>`;
-        
-        // Set fill height based on percentage
-        creatureDisplay.style.setProperty('--fill-height', `${percentage}%`);
+            // Update creature display
+            const creature = this.getCreatureForDate(this.selectedDate);
+            const isToday = this.selectedDate.toDateString() === new Date().toDateString();
+            const companionText = isToday ? "Today's companion" : "Day's companion";
+            
+            const creatureNameEl = document.getElementById('creature-name');
+            if (creatureNameEl) {
+                creatureNameEl.textContent = `${companionText}: ${creature.name}`;
+            }
+            
+            const creatureDisplay = document.getElementById('creature-display');
+            if (creatureDisplay) {
+                creatureDisplay.innerHTML = `<span>${creature.emoji}</span>`;
+                // Set fill height based on percentage
+                creatureDisplay.style.setProperty('--fill-height', `${percentage}%`);
+            }
 
-        // Update fill bar
-        const fillBar = document.getElementById('fill-bar');
-        fillBar.style.width = `${percentage}%`;
-        if (percentage > 10) {
-            fillBar.textContent = `${percentage}%`;
-        } else {
-            fillBar.textContent = '';
+            // Update fill bar
+            const fillBar = document.getElementById('fill-bar');
+            if (fillBar) {
+                fillBar.style.width = `${percentage}%`;
+                if (percentage > 10) {
+                    fillBar.textContent = `${percentage}%`;
+                } else {
+                    fillBar.textContent = '';
+                }
+            }
+        } catch (error) {
+            console.error('Error updating display:', error);
         }
     }
 
@@ -1208,6 +1399,14 @@ class WaterIntakeTracker {
         // Display user email in settings
         document.getElementById('settings-user-email').textContent = this.userEmail;
         
+        // Admin config save button
+        const saveAdminBtn = document.getElementById('save-admin-config-btn');
+        if (saveAdminBtn) {
+            saveAdminBtn.addEventListener('click', () => {
+                this.saveAdminConfig();
+            });
+        }
+        
         // Test email button
         const testEmailBtn = document.getElementById('send-test-email-btn');
         if (testEmailBtn) {
@@ -1234,7 +1433,7 @@ class WaterIntakeTracker {
             });
         }
         
-        // Save EmailJS configuration button
+        // Save EmailJS configuration button (backward compatibility for old UI)
         const saveConfigBtn = document.getElementById('save-emailjs-config');
         if (saveConfigBtn) {
             saveConfigBtn.addEventListener('click', () => {
@@ -1242,7 +1441,7 @@ class WaterIntakeTracker {
             });
         }
         
-        // Load EmailJS configuration
+        // Load EmailJS configuration (backward compatibility)
         this.loadEmailJSConfig();
     }
 
@@ -1370,13 +1569,21 @@ class WaterIntakeTracker {
         // Show loading state
         btn.disabled = true;
         btn.innerHTML = '⏳ Sending...';
-        messageEl.style.display = 'none';
+        if (messageEl) {
+            messageEl.style.display = 'none';
+        }
         
         try {
-            // Check if EmailJS is configured
-            const config = this.getEmailJSConfig();
+            // Check if EmailJS is configured (Firestore or localStorage)
+            const config = this.emailConfig || this.getEmailJSConfig();
             if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
                 this.showTestMessage('❌ Please configure EmailJS settings first', 'error');
+                return;
+            }
+            
+            // Check if email system is enabled (for Firestore config)
+            if (this.emailConfig && !this.emailConfig.enabled) {
+                this.showTestMessage('❌ Email system is currently disabled by administrator', 'error');
                 return;
             }
             

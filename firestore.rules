@@ -11,6 +11,11 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
     
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == 'kartikmehta15@gmail.com';
+    }
+    
     // Users collection rules
     match /users/{userId} {
       // Users can only read and write their own user document
@@ -29,6 +34,12 @@ service cloud.firestore {
           && request.resource.data.goal >= 0;
         allow delete: if isOwner(userId);
       }
+    }
+    
+    // Email configuration (admin-only write, all authenticated users can read)
+    match /config/emailjs {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
     
     // Deny all other requests by default
