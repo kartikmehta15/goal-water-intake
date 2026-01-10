@@ -564,7 +564,7 @@ class WaterIntakeTracker {
     updateCircularProgress(percentage) {
         const circle = document.getElementById('progress-circle');
         if (circle) {
-            const radius = 75;
+            const radius = 52;
             const circumference = 2 * Math.PI * radius;
             const offset = circumference - (percentage / 100) * circumference;
             circle.style.strokeDashoffset = offset;
