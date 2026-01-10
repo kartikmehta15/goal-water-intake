@@ -1020,6 +1020,14 @@ class WaterIntakeTracker {
 
         // Display user email in settings
         document.getElementById('settings-user-email').textContent = this.userEmail;
+        
+        // Test email button
+        const testEmailBtn = document.getElementById('send-test-email-btn');
+        if (testEmailBtn) {
+            testEmailBtn.addEventListener('click', () => {
+                this.sendTestEmail();
+            });
+        }
     }
 
     async loadUserSettings() {
@@ -1045,6 +1053,12 @@ class WaterIntakeTracker {
                 if (settings.defaultDailyGoal) {
                     document.getElementById('daily-goal-setting').value = settings.defaultDailyGoal;
                 }
+            }
+            
+            // Set test email address
+            const testEmailEl = document.getElementById('test-email-address');
+            if (testEmailEl) {
+                testEmailEl.textContent = this.userEmail;
             }
         } catch (error) {
             console.error('Error loading user settings:', error);
@@ -1091,6 +1105,56 @@ class WaterIntakeTracker {
             console.error('Error saving account settings:', error);
             this.showError('Failed to save account settings. Please try again.');
         }
+    }
+
+    // Send test email
+    async sendTestEmail() {
+        const btn = document.getElementById('send-test-email-btn');
+        const messageEl = document.getElementById('test-message');
+        const originalText = btn.innerHTML;
+        
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Sending...';
+        messageEl.style.display = 'none';
+        
+        try {
+            // Call Firebase HTTP Callable Function
+            const sendTestEmailFunc = firebase.functions().httpsCallable('sendTestEmail');
+            const result = await sendTestEmailFunc();
+            
+            // Show success message
+            this.showTestMessage(
+                `✅ ${result.data.message} Check your inbox (and spam folder)!`,
+                'success'
+            );
+            
+        } catch (error) {
+            console.error('Test email error:', error);
+            
+            let errorMsg = 'Failed to send test email.';
+            if (error.message) {
+                errorMsg += ' ' + error.message;
+            }
+            
+            this.showTestMessage(`❌ ${errorMsg}`, 'error');
+            
+        } finally {
+            // Restore button state
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+
+    showTestMessage(message, type) {
+        const messageEl = document.getElementById('test-message');
+        messageEl.textContent = message;
+        messageEl.className = `test-message ${type}`;
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            messageEl.style.display = 'none';
+        }, 5000);
     }
 }
 
