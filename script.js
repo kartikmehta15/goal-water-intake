@@ -1,6 +1,9 @@
 // Water Intake Tracker Application
 
 // Admin email - Replace with your actual email address
+// NOTE: For production with multiple admins, consider using Firebase custom claims
+// or a Firestore collection to manage admin users. This simple approach works for
+// single-admin scenarios and zero-cost hosting (GitHub Pages + Firestore free tier).
 const ADMIN_EMAIL = 'kartikmehta15@gmail.com';
 
 // Power User Code - Frontend verification only
@@ -288,6 +291,9 @@ class WaterIntakeTracker {
                     this.emailjsInitialized = true;
                     console.log('EmailJS initialized successfully');
                     return true;
+                } else {
+                    console.error('EmailJS library not loaded');
+                    return false;
                 }
             } catch (error) {
                 console.error('Failed to initialize EmailJS:', error);

@@ -12,6 +12,9 @@ service cloud.firestore {
     }
     
     // Helper function to check if user is admin
+    // NOTE: For production with multiple admins, consider using Firebase custom claims
+    // or a Firestore collection to manage admin users. This simple approach works for
+    // single-admin scenarios and zero-cost hosting.
     function isAdmin() {
       return isAuthenticated() && request.auth.token.email == 'kartikmehta15@gmail.com';
     }
