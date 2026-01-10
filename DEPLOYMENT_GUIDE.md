@@ -147,3 +147,52 @@ If you encounter issues:
 2. Check SendGrid activity feed
 3. Verify Firestore security rules
 4. Review function configuration: `firebase functions:config:get`
+
+## Testing Email Delivery
+
+### Quick Test (Recommended)
+
+1. Go to your website
+2. Navigate to **Settings** tab
+3. Enable "Email Notifications"
+4. Click **"📨 Send Test Email Now"**
+5. Check your inbox (and spam folder!)
+
+**What to expect:**
+- Email arrives within 10-30 seconds
+- Subject: "🧪 TEST - Water Intake Reminder"
+- Shows yellow "THIS IS A TEST EMAIL" badge
+- Displays your current water intake progress
+- Includes link to website
+- ✅ Green message confirms setup is working
+
+### If Test Email Doesn't Arrive
+
+1. **Check spam/junk folder**
+2. **Verify SendGrid sender** is verified in SendGrid dashboard
+3. **Check Firebase Functions logs:**
+   ```bash
+   firebase functions:log --only sendTestEmail
+   ```
+4. **Check SendGrid Activity Feed:**
+   - Go to SendGrid Dashboard → Activity Feed
+   - Look for recent emails to your address
+   - Check delivery status
+
+5. **Common issues:**
+   - SendGrid sender not verified → Verify sender in SendGrid
+   - API key incorrect → Update Firebase config
+   - Function not deployed → Run `firebase deploy --only functions`
+
+### Testing Scheduled Emails
+
+After test email works, test scheduled reminders:
+
+1. Enable notifications in Settings
+2. Select desired times (11 AM, 3 PM, 7 PM)
+3. Choose your timezone
+4. Save settings
+5. Wait for next scheduled time
+6. Check email
+
+**Note:** Scheduled emails run on the hour in UTC, converted to your timezone.

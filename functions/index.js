@@ -38,122 +38,136 @@ async function getUserProgress(userId) {
     }
 }
 
-// Email template function
-function generateEmailHTML(userName, progress, timeOfDay) {
+// Email sending function with new template for test emails
+async function sendReminderEmail(userEmail, progress, websiteUrl, timeOfDay) {
     const { amount, goal, percentage } = progress;
-    const websiteUrl = 'https://kartikmehta15.github.io/goal-water-intake/';
     
-    let motivationMessage = '';
     let emoji = '💧';
+    let message = 'Time for a water break!';
+    let subject = 'Time to Hydrate!';
     
-    if (percentage >= 100) {
-        motivationMessage = "Amazing! You've already reached your goal today! 🎉";
-        emoji = '🏆';
-    } else if (percentage >= 75) {
-        motivationMessage = "Great job! You're almost there! Keep it up! 💪";
-        emoji = '🌊';
-    } else if (percentage >= 50) {
-        motivationMessage = "You're halfway there! Time to drink some water! 💧";
-        emoji = '💦';
-    } else if (percentage >= 25) {
-        motivationMessage = "Don't forget to stay hydrated! Let's catch up! 🥤";
-        emoji = '💧';
-    } else {
-        motivationMessage = "Time to start hydrating! Your body needs water! 🚰";
-        emoji = '⚡';
+    if (timeOfDay === 'morning') {
+        emoji = '☀️';
+        message = 'Start your day hydrated!';
+        subject = '☀️ Morning Hydration Reminder';
+    } else if (timeOfDay === 'afternoon') {
+        emoji = '🌤️';
+        message = 'Afternoon hydration check!';
+        subject = '🌤️ Afternoon Hydration Reminder';
+    } else if (timeOfDay === 'evening') {
+        emoji = '🌙';
+        message = 'Evening reminder to stay hydrated!';
+        subject = '🌙 Evening Hydration Reminder';
+    } else if (timeOfDay === 'test') {
+        emoji = '🧪';
+        message = 'This is a TEST email!';
+        subject = '🧪 TEST - Water Intake Reminder';
     }
     
-    const timeMessages = {
-        morning: '☀️ Good Morning',
-        afternoon: '🌤️ Good Afternoon',
-        evening: '🌙 Good Evening'
+    const msg = {
+        to: userEmail,
+        from: 'noreply@watertracker.app', // Must match verified sender
+        subject: subject,
+        html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                    .header h1 { margin: 0; font-size: 28px; }
+                    .test-badge { background: #ffc107; color: #333; padding: 8px 16px; border-radius: 5px; display: inline-block; margin-top: 10px; font-weight: bold; font-size: 14px; }
+                    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                    .progress-bar { width: 100%; height: 30px; background: #e0e0e0; border-radius: 15px; overflow: hidden; margin: 20px 0; }
+                    .progress-fill { height: 100%; background: linear-gradient(90deg, #4A90E2, #50C878); transition: width 0.3s; }
+                    .stats { display: flex; justify-content: space-around; margin: 20px 0; }
+                    .stat { text-align: center; padding: 15px; background: white; border-radius: 8px; flex: 1; margin: 0 5px; }
+                    .stat-value { font-size: 24px; font-weight: bold; color: #4A90E2; }
+                    .stat-label { font-size: 14px; color: #666; margin-top: 5px; }
+                    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; font-weight: bold; }
+                    .cta-button:hover { opacity: 0.9; }
+                    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #999; }
+                    .footer a { color: #999; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>${emoji} Time to Hydrate!</h1>
+                        <p>${message}</p>
+                        ${timeOfDay === 'test' ? '<div class="test-badge">🧪 THIS IS A TEST EMAIL</div>' : ''}
+                    </div>
+                    <div class="content">
+                        <p>Hi there! 👋</p>
+                        ${timeOfDay === 'test' ? '<p><strong>This is a test email to verify your notification system is working correctly.</strong></p>' : ''}
+                        <p>Here's your progress today:</p>
+                        
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${Math.min(percentage, 100)}%"></div>
+                        </div>
+                        
+                        <div class="stats">
+                            <div class="stat">
+                                <div class="stat-value">${amount}</div>
+                                <div class="stat-label">Current (ml)</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${goal}</div>
+                                <div class="stat-label">Goal (ml)</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-value">${percentage}%</div>
+                                <div class="stat-label">Progress</div>
+                            </div>
+                        </div>
+                        
+                        ${percentage < 100 ? `
+                            <p><strong>Remember to:</strong></p>
+                            <ul>
+                                <li>✅ Drink a glass of water</li>
+                                <li>✅ Update your intake</li>
+                            </ul>
+                        ` : `
+                            <p><strong>🎉 Congratulations!</strong> You've already met your goal for today! Keep it up!</p>
+                        `}
+                        
+                        <center>
+                            <a href="${websiteUrl}" class="cta-button">👉 Update Now</a>
+                        </center>
+                        
+                        <p>Keep up the great work! 💪</p>
+                        
+                        ${timeOfDay === 'test' ? '<p><em style="color: #28a745;">✅ If you received this email, your notification system is configured correctly!</em></p>' : ''}
+                    </div>
+                    <div class="footer">
+                        <p>Water Intake Tracker</p>
+                        <p><a href="${websiteUrl}">Manage notification settings</a></p>
+                    </div>
+                </div>
+            </body>
+            </html>
+        `
     };
     
-    return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f7fa; }
-            .container { max-width: 600px; margin: 0 auto; background: white; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-            .header h1 { margin: 0; font-size: 28px; }
-            .content { padding: 30px; }
-            .progress-container { background: #f5f7fa; border-radius: 12px; padding: 20px; margin: 20px 0; text-align: center; }
-            .progress-bar { background: #e1e4e8; border-radius: 10px; height: 20px; overflow: hidden; margin: 15px 0; }
-            .progress-fill { background: linear-gradient(90deg, #4A90E2, #50C878); height: 100%; border-radius: 10px; transition: width 0.3s; }
-            .stats { display: flex; justify-content: space-around; margin: 15px 0; }
-            .stat { text-align: center; }
-            .stat-value { font-size: 24px; font-weight: bold; color: #4A90E2; }
-            .stat-label { font-size: 14px; color: #666; }
-            .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
-            .cta-button:hover { opacity: 0.9; }
-            .motivation { background: #e3f2fd; border-left: 4px solid #4A90E2; padding: 15px; margin: 20px 0; border-radius: 4px; }
-            .footer { background: #f5f7fa; padding: 20px; text-align: center; font-size: 12px; color: #666; }
-            .footer a { color: #4A90E2; text-decoration: none; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>${emoji} ${timeMessages[timeOfDay]}!</h1>
-                <p>Time to Stay Hydrated</p>
-            </div>
-            
-            <div class="content">
-                <p>Hi there! 👋</p>
-                
-                <div class="progress-container">
-                    <h2>Today's Hydration Progress</h2>
-                    <div class="stats">
-                        <div class="stat">
-                            <div class="stat-value">${amount} ml</div>
-                            <div class="stat-label">Current</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">${goal} ml</div>
-                            <div class="stat-label">Goal</div>
-                        </div>
-                        <div class="stat">
-                            <div class="stat-value">${percentage}%</div>
-                            <div class="stat-label">Complete</div>
-                        </div>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${Math.min(percentage, 100)}%"></div>
-                    </div>
-                </div>
-                
-                <div class="motivation">
-                    <strong>${motivationMessage}</strong>
-                </div>
-                
-                <p style="text-align: center;">
-                    <a href="${websiteUrl}" class="cta-button">💧 Update Your Intake Now</a>
-                </p>
-                
-                <p style="font-size: 14px; color: #666;">
-                    Remember: Staying hydrated is essential for your health, energy, and focus throughout the day!
-                </p>
-            </div>
-            
-            <div class="footer">
-                <p>Water Intake Tracker</p>
-                <p><a href="${websiteUrl}">Visit Website</a> | <a href="${websiteUrl}">Manage Settings</a></p>
-                <p style="margin-top: 15px;">You're receiving this because you enabled email reminders.</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    `;
+    try {
+        await sgMail.send(msg);
+        console.log(`Email sent to ${userEmail}`);
+        return true;
+    } catch (error) {
+        console.error(`Error sending email to ${userEmail}:`, error);
+        if (error.response) {
+            console.error(error.response.body);
+        }
+        return false;
+    }
 }
 
-// Helper function to send email
-async function sendReminderEmail(user, timeOfDay) {
+// Helper function to send reminder email (wrapper for scheduled functions)
+async function sendScheduledReminderEmail(user, timeOfDay) {
     try {
         const progress = await getUserProgress(user.userId);
+        const websiteUrl = 'https://kartikmehta15.github.io/goal-water-intake/';
         
         // Don't send if already at 100% (optional)
         // if (progress.percentage >= 100) {
@@ -161,16 +175,7 @@ async function sendReminderEmail(user, timeOfDay) {
         //     return;
         // }
         
-        const emailHTML = generateEmailHTML(user.email, progress, timeOfDay);
-        
-        const msg = {
-            to: user.email,
-            from: 'noreply@waterintaketracker.com', // Change to your verified SendGrid sender
-            subject: `💧 ${timeOfDay === 'morning' ? 'Morning' : timeOfDay === 'afternoon' ? 'Afternoon' : 'Evening'} Hydration Reminder`,
-            html: emailHTML
-        };
-        
-        await sgMail.send(msg);
+        await sendReminderEmail(user.email, progress, websiteUrl, timeOfDay);
         console.log(`Email sent successfully to ${user.email}`);
     } catch (error) {
         console.error(`Error sending email to ${user.email}:`, error);
@@ -191,7 +196,7 @@ exports.sendMorningReminder = functions.pubsub
             const promises = [];
             usersSnapshot.forEach(doc => {
                 const user = doc.data();
-                promises.push(sendReminderEmail(user, 'morning'));
+                promises.push(sendScheduledReminderEmail(user, 'morning'));
             });
             
             await Promise.all(promises);
@@ -215,7 +220,7 @@ exports.sendAfternoonReminder = functions.pubsub
             const promises = [];
             usersSnapshot.forEach(doc => {
                 const user = doc.data();
-                promises.push(sendReminderEmail(user, 'afternoon'));
+                promises.push(sendScheduledReminderEmail(user, 'afternoon'));
             });
             
             await Promise.all(promises);
@@ -239,11 +244,53 @@ exports.sendEveningReminder = functions.pubsub
             const promises = [];
             usersSnapshot.forEach(doc => {
                 const user = doc.data();
-                promises.push(sendReminderEmail(user, 'evening'));
+                promises.push(sendScheduledReminderEmail(user, 'evening'));
             });
             
             await Promise.all(promises);
             console.log(`Evening reminders sent to ${promises.length} users`);
+        } catch (error) {
+            console.error('Error in sendEveningReminder:', error);
+        }
+    });
+
+// HTTP CALLABLE FUNCTION - Send Test Email
+exports.sendTestEmail = functions.https.onCall(async (data, context) => {
+    // Verify authentication
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be logged in to send test email');
+    }
+    
+    const userId = context.auth.uid;
+    const userEmail = context.auth.token.email;
+    
+    console.log(`Test email requested by ${userEmail}`);
+    
+    try {
+        // Get user's current progress
+        const progress = await getUserProgress(userId);
+        
+        // Send test email with 'test' timeOfDay to show TEST badge
+        const success = await sendReminderEmail(
+            userEmail,
+            progress,
+            'https://kartikmehta15.github.io/goal-water-intake/',
+            'test'
+        );
+        
+        if (success) {
+            return { 
+                message: 'Test email sent successfully!',
+                sentTo: userEmail
+            };
+        } else {
+            throw new functions.https.HttpsError('internal', 'Failed to send email via SendGrid');
+        }
+    } catch (error) {
+        console.error('Error sending test email:', error);
+        throw new functions.https.HttpsError('internal', 'Failed to send test email: ' + error.message);
+    }
+});
         } catch (error) {
             console.error('Error in sendEveningReminder:', error);
         }
