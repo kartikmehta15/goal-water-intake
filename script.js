@@ -77,11 +77,14 @@ class WaterIntakeTracker {
 
     init() {
         this.setupUserProfile();
+        this.setupTabNavigation();
+        this.setupQuickAddButtons();
         this.setupEventListeners();
         this.updateDateSelector();
         this.updateDisplay();
         this.renderCalendar();
         this.updateStatistics();
+        this.updateMonthSummary();
         this.initializeExportDates();
     }
 
@@ -95,6 +98,96 @@ class WaterIntakeTracker {
                 AuthSystem.logout();
             }
         });
+    }
+
+    setupTabNavigation() {
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabName = button.dataset.tab;
+                
+                // Remove active class from all tabs and contents
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked tab and corresponding content
+                button.classList.add('active');
+                document.getElementById(`tab-${tabName}`).classList.add('active');
+                
+                // Trigger calendar render if calendar tab is opened
+                if (tabName === 'calendar') {
+                    this.renderCalendar();
+                    this.updateMonthSummary();
+                }
+            });
+        });
+    }
+
+    setupQuickAddButtons() {
+        const quickAddButtons = document.querySelectorAll('.quick-add-btn:not(.custom)');
+        const customBtn = document.getElementById('show-custom-btn');
+        const customContainer = document.getElementById('custom-input-container');
+        
+        quickAddButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const amount = parseInt(button.dataset.amount);
+                this.quickAddWater(amount);
+            });
+        });
+        
+        if (customBtn && customContainer) {
+            customBtn.addEventListener('click', () => {
+                const isVisible = customContainer.style.display !== 'none';
+                customContainer.style.display = isVisible ? 'none' : 'block';
+            });
+        }
+    }
+
+    async quickAddWater(amount) {
+        const dateKey = this.getDateKey(this.selectedDate);
+        const currentData = this.data[dateKey] || { intake: 0, goal: this.defaultGoal };
+        const newAmount = currentData.intake + amount;
+        
+        try {
+            // Update local data immediately
+            this.data[dateKey] = {
+                intake: newAmount,
+                goal: currentData.goal
+            };
+            
+            // Save to Firestore
+            await db.collection('users')
+                .doc(this.userId)
+                .collection('waterIntake')
+                .doc(dateKey)
+                .set({
+                    date: dateKey,
+                    intake: newAmount,
+                    goal: currentData.goal,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            
+            // Update display
+            this.updateDisplay();
+            this.renderCalendar();
+            this.updateStatistics();
+            this.updateMonthSummary();
+            
+            // Show success feedback
+            this.showToast('success', 'Added!', `+${amount}ml added successfully`);
+            
+            // Check for goal achievement
+            const percentage = (newAmount / currentData.goal) * 100;
+            if (percentage >= 100 && (currentData.intake / currentData.goal * 100) < 100) {
+                this.showConfetti();
+                this.showToast('success', '🎉 Goal Achieved!', 'You reached your daily goal!');
+            }
+        } catch (error) {
+            console.error('Error adding water:', error);
+            this.showError('Failed to add water. Please check your connection.');
+        }
     }
 
     async checkAndMigrateData() {
@@ -471,10 +564,21 @@ class WaterIntakeTracker {
     updateCircularProgress(percentage) {
         const circle = document.getElementById('progress-circle');
         if (circle) {
-            const radius = 65;
+            const radius = 75;
             const circumference = 2 * Math.PI * radius;
             const offset = circumference - (percentage / 100) * circumference;
             circle.style.strokeDashoffset = offset;
+            
+            // Change color based on percentage
+            if (percentage >= 100) {
+                circle.style.stroke = '#28a745';
+            } else if (percentage >= 75) {
+                circle.style.stroke = 'url(#progressGradient)';
+            } else if (percentage >= 50) {
+                circle.style.stroke = '#ffc107';
+            } else {
+                circle.style.stroke = '#dc3545';
+            }
         }
     }
 
@@ -581,6 +685,9 @@ class WaterIntakeTracker {
 
             calendarGrid.appendChild(dayElement);
         }
+        
+        // Update month summary
+        this.updateMonthSummary();
     }
 
     calculateStatistics() {
@@ -807,6 +914,37 @@ class WaterIntakeTracker {
             btn.textContent = originalText;
             btn.classList.remove('success-feedback');
         }, 2000);
+    }
+
+    calculateMonthSummary() {
+        const currentMonth = this.currentDate.getMonth();
+        const currentYear = this.currentDate.getFullYear();
+        
+        let totalDays = 0;
+        let goalMetDays = 0;
+        
+        Object.keys(this.data).forEach(dateStr => {
+            const date = new Date(dateStr);
+            if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+                totalDays++;
+                const dayData = this.data[dateStr];
+                const percentage = (dayData.intake / dayData.goal) * 100;
+                if (percentage >= 100) {
+                    goalMetDays++;
+                }
+            }
+        });
+        
+        return { totalDays, goalMetDays };
+    }
+
+    updateMonthSummary() {
+        const summary = this.calculateMonthSummary();
+        const totalEl = document.getElementById('month-total-days');
+        const goalMetEl = document.getElementById('month-goal-met');
+        
+        if (totalEl) totalEl.textContent = summary.totalDays;
+        if (goalMetEl) goalMetEl.textContent = summary.goalMetDays;
     }
 }
 
