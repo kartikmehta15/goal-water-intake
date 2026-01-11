@@ -11,6 +11,7 @@ This guide will help you set up Gmail SMTP for sending email notifications from 
 - ✅ **Works on Firebase Spark Plan** - No need to upgrade
 - ✅ **Simple Setup** - Just 5 minutes
 - ✅ **Reliable** - Gmail's infrastructure
+- ✅ **Admin-Only Configuration** - Set up once, works for all users
 
 ---
 
@@ -19,6 +20,18 @@ This guide will help you set up Gmail SMTP for sending email notifications from 
 - A Gmail account
 - Firebase CLI installed (`npm install -g firebase-tools`)
 - Access to your Firebase project
+- Admin access to the Water Tracker application
+
+---
+
+## Setup Overview
+
+The new system uses **admin-configured SMTP** stored securely in Firestore:
+1. **Admin** configures SMTP settings once (encrypted in Firestore)
+2. **Cloud Functions** read the configuration and send emails
+3. **Users** simply enable notifications and set reminder times
+
+**No more Firebase environment config needed!** Everything is managed through the web UI.
 
 ---
 
@@ -44,77 +57,19 @@ This guide will help you set up Gmail SMTP for sending email notifications from 
 
 ---
 
-## Step 2: Configure Firebase Functions (2 minutes)
+## Step 2: Deploy Cloud Functions (2 minutes)
 
-Open your terminal and navigate to your project directory:
+First, install dependencies and deploy the Cloud Functions:
 
 ```bash
 cd /path/to/goal-water-intake
-```
 
-Set the Gmail SMTP configuration:
-
-```bash
-# Set your Gmail address
-firebase functions:config:set gmail.user="your-email@gmail.com"
-
-# Set your Gmail App Password (no spaces)
-firebase functions:config:set gmail.pass="abcdefghijklmnop"
-
-# Set the power user access code
-firebase functions:config:set poweruser.code="WATER-HYDRO-2026-PWR9"
-```
-
-**Important Notes:**
-- Replace `your-email@gmail.com` with your actual Gmail address
-- Replace `abcdefghijklmnop` with your actual App Password (no spaces)
-- The power user code can be changed to any value you want
-- **Never commit these values to Git** - they're stored securely in Firebase
-
-Verify your configuration:
-
-```bash
-firebase functions:config:get
-```
-
-You should see:
-
-```json
-{
-  "gmail": {
-    "user": "your-email@gmail.com",
-    "pass": "abcdefghijklmnop"
-  },
-  "poweruser": {
-    "code": "WATER-HYDRO-2026-PWR9"
-  }
-}
-```
-
----
-
-## Step 3: Install Dependencies (1 minute)
-
-Install the required npm packages for Cloud Functions:
-
-```bash
+# Install dependencies
 cd functions
 npm install
 cd ..
-```
 
-This will install:
-- `firebase-admin` - Firebase Admin SDK
-- `firebase-functions` - Cloud Functions SDK
-- `nodemailer` - Email sending library (replaces SendGrid)
-
----
-
-## Step 4: Deploy Functions (2 minutes)
-
-Deploy the Cloud Functions to Firebase:
-
-```bash
+# Deploy functions
 firebase deploy --only functions
 ```
 
@@ -125,40 +80,104 @@ Wait for deployment to complete. You should see:
 ✔  functions[checkEmailReminders(us-central1)]: Successful create operation.
 ✔  functions[verifyPowerUserCode(us-central1)]: Successful create operation.
 ✔  functions[sendTestEmail(us-central1)]: Successful create operation.
+✔  functions[encryptSmtpPassword(us-central1)]: Successful create operation.
+✔  functions[testAdminSmtpConfig(us-central1)]: Successful create operation.
 
 ✔  Deploy complete!
 ```
 
+**Note:** If you want to change the admin email from the default (`kartikmehta15@gmail.com`), update:
+- `ADMIN_EMAIL` constant in `script.js` (line 7)
+- `ADMIN_EMAIL` constant in `functions/index.js` (line 10)
+
+Make sure both files have the **same email address**!
+
 ---
 
-## Step 5: Test Email Delivery (1 minute)
+## Step 3: Configure SMTP via Admin Panel (2 minutes)
 
 1. **Open your Water Tracker website**
-2. **Go to Settings tab**
-3. **Unlock Power User Features**:
-   - Enter code: `WATER-HYDRO-2026-PWR9`
-   - Click "Unlock"
-   - You should see "✅ Power User Unlocked"
+2. **Log in as admin** (default: `kartikmehta15@gmail.com` - change if you modified the constants)
+3. **Go to Settings tab**
+4. **You should see "Administrator Controls" section** at the top
 
-4. **Enable Email Notifications**:
-   - Toggle "Enable Email Reminders"
-   - Configure your reminder times
-   - Click "Save Settings"
+5. **Fill in SMTP Configuration**:
+   - **SMTP Host:** `smtp.gmail.com`
+   - **SMTP Port:** `587`
+   - **Sender Email Address:** `your-email@gmail.com`
+   - **Email Password / App Password:** Paste the 16-character App Password (no spaces)
+   - **Check:** "Enable email system for all users"
 
-5. **Send Test Email**:
-   - Scroll to "Test Email Delivery" section
-   - Click "Send Test Email Now"
+6. **Click "Save & Test Email"**
+   - This will encrypt your password and save it to Firestore
+   - A test email will be sent to verify the configuration
    - Wait 10-30 seconds
    - Check your inbox (and spam folder)
 
-6. **Success!**
+7. **Success!**
    - You should receive a test email with 🧪 badge
-   - Email shows your current water intake progress
-   - Includes a link back to the website
+   - Configuration status will show "✅ Configured"
+   - All users can now enable email notifications
+
+---
+
+## Step 4: User Setup (1 minute per user)
+
+Regular users can now enable email notifications:
+
+1. **Log in to Water Tracker**
+2. **Go to Settings tab**
+3. **Scroll to "Email Notifications"**
+4. **If you see "Power User" lock:**
+   - Enter code: `WATER-HYDRO-2026-PWR9`
+   - Click "Unlock"
+5. **Enable Email Reminders:**
+   - Toggle "Enable Email Reminders"
+   - Configure up to 5 reminder times
+   - Click "Save Settings"
+6. **Test it:**
+   - Click "Send Test Email Now"
+   - Check your inbox
 
 ---
 
 ## How It Works
+
+### Architecture
+
+```
+┌─────────────────┐
+│  Admin Panel    │
+│  (Web UI)       │
+└────────┬────────┘
+         │ Saves encrypted config
+         ▼
+┌─────────────────────┐
+│  Firestore          │
+│  /adminSettings/    │
+│   emailConfig       │
+└────────┬────────────┘
+         │ Reads config
+         ▼
+┌─────────────────────┐
+│  Cloud Functions    │
+│  - Hourly scheduler │
+│  - Email sender     │
+└────────┬────────────┘
+         │ Sends emails
+         ▼
+┌─────────────────────┐
+│  Gmail SMTP         │
+│  (500/day free)     │
+└─────────────────────┘
+```
+
+### Security
+
+1. **Password Encryption**: SMTP password is encrypted using AES-256-CBC before storing in Firestore
+2. **Admin-Only Access**: Only the admin email can configure SMTP settings
+3. **Firestore Rules**: Security rules prevent non-admin users from reading/writing SMTP config
+4. **Cloud Functions**: Decrypt password at runtime in secure environment
 
 ### Cloud Functions
 
@@ -169,33 +188,32 @@ Wait for deployment to complete. You should see:
 - Converts times to user's timezone
 - Sends email if hour matches
 
-**2. `verifyPowerUserCode`** (HTTP Callable)
-- Verifies user-entered access code
-- Compares against Firebase config value
-- Returns success/failure
-- Client stores result in Firestore
+**2. `encryptSmtpPassword`** (HTTP Callable - Admin only)
+- Encrypts SMTP password using AES-256-CBC
+- Returns encrypted string for Firestore storage
+- Only accessible by admin
 
-**3. `sendTestEmail`** (HTTP Callable)
-- Requires authentication
+**3. `testAdminSmtpConfig`** (HTTP Callable - Admin only)
+- Tests SMTP configuration
+- Sends test email to admin
+- Verifies connection and credentials
+
+**4. `sendTestEmail`** (HTTP Callable - Power users)
+- Sends test email to the requesting user
 - Requires power user verification
-- Sends immediate test email
 - Shows current progress
-- Marked as "TEST EMAIL" with yellow badge
+
+**5. `verifyPowerUserCode`** (HTTP Callable)
+- Verifies power user access code
+- Client-side verification for zero-cost hosting
 
 ### Email Reminders
 
 You can configure up to **5 custom reminders**:
 
 **Preset Times:**
-- 7:00 AM
-- 9:00 AM
-- 11:00 AM
-- 12:00 PM (Noon)
-- 2:00 PM
-- 3:00 PM
-- 5:00 PM
-- 7:00 PM
-- 9:00 PM
+- 7:00 AM, 9:00 AM, 11:00 AM, 12:00 PM (Noon)
+- 2:00 PM, 3:00 PM, 5:00 PM, 7:00 PM, 9:00 PM
 
 **Or Custom Time:**
 - Enter any time in HH:MM format (e.g., 10:30 AM)
