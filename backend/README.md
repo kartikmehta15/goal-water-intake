@@ -27,6 +27,12 @@ cd backend
 npm install
 ```
 
+**Security Note**: This project uses nodemailer ^7.0.12 which includes patches for:
+- CVE for email domain interpretation conflict (< 7.0.7)
+- DoS vulnerabilities in addressparser (< 7.0.11)
+
+Always run `npm audit` after installation to ensure no vulnerabilities.
+
 ### 2. Configure Environment Variables
 
 Copy `.env.example` to `.env`:
