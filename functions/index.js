@@ -5,8 +5,9 @@ const nodemailer = require('nodemailer');
 admin.initializeApp();
 const db = admin.firestore();
 
-// Admin email configuration
-const ADMIN_EMAIL = 'kartikmehta15@gmail.com';
+// Admin email configuration - from Firebase config or fallback to default
+// Set via: firebase functions:config:set admin.email="your-email@example.com"
+const ADMIN_EMAIL = functions.config().admin?.email || 'kartikmehta15@gmail.com';
 
 // Get Gmail SMTP credentials from Firebase config
 const gmailUser = functions.config().gmail?.user;

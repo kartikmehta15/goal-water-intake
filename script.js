@@ -1598,7 +1598,7 @@ class WaterIntakeTracker {
             if (error.code === 'unauthenticated') {
                 errorMessage += 'Please sign in first.';
             } else if (error.code === 'permission-denied') {
-                errorMessage += 'Power user verification required.';
+                errorMessage += 'Administrator access required.';
             } else if (error.message) {
                 errorMessage += error.message;
             } else {
