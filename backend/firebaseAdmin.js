@@ -15,6 +15,12 @@ const initializeFirebaseAdmin = () => {
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL
         };
 
+        // Only initialize if we have valid-looking credentials
+        if (!serviceAccount.projectId || !serviceAccount.clientEmail) {
+            console.warn('Firebase Admin SDK not initialized - missing credentials');
+            return null;
+        }
+
         admin.initializeApp({
             credential: admin.credential.cert(serviceAccount)
         });
@@ -22,16 +28,16 @@ const initializeFirebaseAdmin = () => {
         console.log('Firebase Admin SDK initialized successfully');
         return admin.app();
     } catch (error) {
-        console.error('Error initializing Firebase Admin SDK:', error);
-        throw error;
+        console.error('Error initializing Firebase Admin SDK:', error.message);
+        return null;
     }
 };
 
-// Initialize and export
+// Initialize
 initializeFirebaseAdmin();
 
-// Export Firestore database
-const db = admin.firestore();
+// Export Firestore database (may be null if not initialized)
+const db = admin.apps.length > 0 ? admin.firestore() : null;
 
 module.exports = {
     admin,
