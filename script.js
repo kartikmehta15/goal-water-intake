@@ -17,7 +17,7 @@ if (BACKEND_URL.includes('your-backend-url.com')) {
 // NOTE: For production with multiple admins, consider using Firebase custom claims
 // or a Firestore collection to manage admin users. This simple approach works for
 // single-admin scenarios and zero-cost hosting (GitHub Pages + Firestore free tier).
-const ADMIN_EMAIL = 'kartikmehta15@gmail.com';
+const ADMIN_EMAIL = 'kartikmehta.iitd@gmail.com';
 
 // Power User Code - Frontend verification only
 // NOTE: In a production environment, this should be verified server-side.

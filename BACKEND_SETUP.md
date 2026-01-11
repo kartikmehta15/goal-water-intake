@@ -95,12 +95,12 @@ NODE_ENV=development
 FRONTEND_URL=http://localhost:8080
 
 # Admin Configuration
-ADMIN_EMAIL=kartikmehta15@gmail.com
+ADMIN_EMAIL=kartikmehta.iitd@gmail.com
 ```
 
 **Important Notes**:
 - The `FIREBASE_PRIVATE_KEY` must include the quotes and `\n` characters
-- Replace `kartikmehta15@gmail.com` with your actual admin email
+- Replace `kartikmehta.iitd@gmail.com` with your actual admin email
 - For local development, `FRONTEND_URL` can be `http://localhost:8080`
 
 ### 3.3 Start the Server
@@ -120,7 +120,7 @@ You should see:
 ✅ Server running on port 3000
 🌍 Environment: development
 🔗 Frontend URL: http://localhost:8080
-👨‍💼 Admin Email: kartikmehta15@gmail.com
+👨‍💼 Admin Email: kartikmehta.iitd@gmail.com
 Email reminder scheduler initialized (runs every 5 minutes)
 ```
 
@@ -153,7 +153,7 @@ Now that the backend is running, configure email settings through the web interf
    ```
 
 2. Open http://localhost:8080 in your browser
-3. Sign in with your admin email (`kartikmehta15@gmail.com`)
+3. Sign in with your admin email (`kartikmehta.iitd@gmail.com`)
 4. Go to **Settings** tab
 5. Scroll to the **"Email SMTP Configuration (Admin Only)"** section
 6. Fill in the form:
@@ -194,7 +194,7 @@ Choose one of these free hosting options for your backend:
    PORT=3000
    NODE_ENV=production
    FRONTEND_URL=https://your-frontend-url.github.io
-   ADMIN_EMAIL=kartikmehta15@gmail.com
+   ADMIN_EMAIL=kartikmehta.iitd@gmail.com
    ```
 6. Click **"Create Web Service"**
 7. Wait for deployment (usually 2-3 minutes)
@@ -232,7 +232,7 @@ Choose one of these free hosting options for your backend:
    flyctl secrets set FIREBASE_PROJECT_ID="your-project-id"
    flyctl secrets set FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
    flyctl secrets set FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com"
-   flyctl secrets set ADMIN_EMAIL="kartikmehta15@gmail.com"
+   flyctl secrets set ADMIN_EMAIL="kartikmehta.iitd@gmail.com"
    flyctl secrets set FRONTEND_URL="https://your-frontend-url.github.io"
    ```
 6. Deploy: `flyctl deploy`

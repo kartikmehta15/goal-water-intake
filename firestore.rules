@@ -16,7 +16,7 @@ service cloud.firestore {
     // or a Firestore collection to manage admin users. This simple approach works for
     // single-admin scenarios and zero-cost hosting.
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.email == 'kartikmehta15@gmail.com';
+      return isAuthenticated() && request.auth.token.email == 'kartikmehta.iitd@gmail.com';
     }
     
     // Users collection rules

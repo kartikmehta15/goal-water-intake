@@ -123,7 +123,7 @@ See [BACKEND_SETUP.md](BACKEND_SETUP.md) for detailed setup instructions.
    FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
    NODE_ENV=production
    FRONTEND_URL=https://your-frontend-url.github.io
-   ADMIN_EMAIL=kartikmehta15@gmail.com
+   ADMIN_EMAIL=kartikmehta.iitd@gmail.com
    PORT=3000
    ```
 
@@ -198,7 +198,7 @@ See [BACKEND_SETUP.md](BACKEND_SETUP.md) for detailed setup instructions.
    flyctl secrets set FIREBASE_PROJECT_ID="your-project-id"
    flyctl secrets set FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
    flyctl secrets set FIREBASE_CLIENT_EMAIL="firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com"
-   flyctl secrets set ADMIN_EMAIL="kartikmehta15@gmail.com"
+   flyctl secrets set ADMIN_EMAIL="kartikmehta.iitd@gmail.com"
    flyctl secrets set FRONTEND_URL="https://your-frontend-url.github.io"
    flyctl secrets set NODE_ENV="production"
    ```
