@@ -6,13 +6,10 @@
       "**/.*",
       "**/node_modules/**",
       "README.md",
-      "functions/**"
+      "backend/**"
     ]
   },
   "firestore": {
     "rules": "firestore.rules"
-  },
-  "functions": {
-    "source": "functions"
   }
 }

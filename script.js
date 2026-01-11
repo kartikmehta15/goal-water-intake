@@ -1,5 +1,12 @@
 // Water Intake Tracker Application
 
+// Backend API URL - Update this to your deployed backend URL
+// For local development: http://localhost:3000
+// For production: Your backend URL (e.g., https://your-backend.render.com)
+const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000'
+    : 'https://your-backend-url.com'; // UPDATE THIS with your deployed backend URL
+
 // Admin email - Replace with your actual email address
 // NOTE: For production with multiple admins, consider using Firebase custom claims
 // or a Firestore collection to manage admin users. This simple approach works for
@@ -15,6 +22,43 @@ const POWER_USER_CODE = 'WATER-HYDRO-2026-PWR9';
 
 // Test message timeout
 const TEST_MESSAGE_TIMEOUT_MS = 8000; // 8 seconds
+
+// Helper function to make authenticated API calls to backend
+async function callBackendAPI(endpoint, method = 'GET', data = null) {
+    try {
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            throw new Error('User not authenticated');
+        }
+        
+        // Get Firebase ID token
+        const token = await user.getIdToken();
+        
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        };
+        
+        if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+            options.body = JSON.stringify(data);
+        }
+        
+        const response = await fetch(`${BACKEND_URL}${endpoint}`, options);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ message: response.statusText }));
+            throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error(`Backend API call failed (${endpoint}):`, error);
+        throw error;
+    }
+}
 
 class WaterIntakeTracker {
     constructor() {
@@ -141,7 +185,9 @@ class WaterIntakeTracker {
     // Load global email configuration from Firestore
     async loadEmailConfig() {
         try {
-            const configDoc = await db.collection('adminSettings').doc('emailConfig').get();
+            // For non-admin users, we check if admin has configured the email system
+            // This is stored in the backend's config/smtp Firestore collection
+            const configDoc = await db.collection('config').doc('smtp').get();
             
             if (configDoc.exists) {
                 this.emailConfig = configDoc.data();
@@ -149,7 +195,7 @@ class WaterIntakeTracker {
                 const statusEl = document.getElementById('email-system-status');
                 const userSettingsEl = document.getElementById('user-notification-settings');
                 
-                if (this.emailConfig.isConfigured) {
+                if (this.emailConfig.enabled) {
                     if (statusEl) {
                         statusEl.innerHTML = '<p class="status-success">✅ Email system is active. Configure your reminders below.</p>';
                     }
@@ -175,10 +221,11 @@ class WaterIntakeTracker {
     // Admin: Load admin SMTP configuration
     async loadAdminConfig() {
         try {
-            const configDoc = await db.collection('adminSettings').doc('emailConfig').get();
+            // Call backend API to get configuration
+            const result = await callBackendAPI('/api/admin/email-config', 'GET');
             
-            if (configDoc.exists) {
-                const config = configDoc.data();
+            if (result.configured && result.config) {
+                const config = result.config;
                 
                 // Populate admin form (don't show password for security)
                 const hostEl = document.getElementById('admin-smtp-host');
@@ -189,7 +236,7 @@ class WaterIntakeTracker {
                 if (hostEl) hostEl.value = config.smtpHost || '';
                 if (portEl) portEl.value = config.smtpPort || 587;
                 if (emailEl) emailEl.value = config.senderEmail || '';
-                if (enabledEl) enabledEl.checked = config.isConfigured || false;
+                if (enabledEl) enabledEl.checked = config.enabled || false;
                 
                 // Update status display
                 const statusEl = document.getElementById('config-status');
@@ -198,12 +245,12 @@ class WaterIntakeTracker {
                 const adminEl = document.getElementById('config-admin');
                 const updatedEl = document.getElementById('config-updated');
                 
-                if (statusEl) statusEl.textContent = config.isConfigured ? '✅ Configured' : '❌ Not Configured';
+                if (statusEl) statusEl.textContent = config.enabled ? '✅ Configured' : '❌ Not Configured';
                 if (hostStatusEl) hostStatusEl.textContent = config.smtpHost || '-';
                 if (emailStatusEl) emailStatusEl.textContent = config.senderEmail || '-';
                 if (adminEl) adminEl.textContent = config.configuredBy || '-';
-                if (updatedEl && config.lastTested) {
-                    updatedEl.textContent = new Date(config.lastTested.toDate()).toLocaleString();
+                if (updatedEl && config.updatedAt) {
+                    updatedEl.textContent = new Date(config.updatedAt).toLocaleString();
                 }
             }
         } catch (error) {
@@ -235,38 +282,23 @@ class WaterIntakeTracker {
         }
         
         try {
-            this.showAdminMessage('⏳ Encrypting and saving configuration...', 'info');
+            this.showAdminMessage('⏳ Saving configuration...', 'info');
             
-            // Call Cloud Function to encrypt password
-            let encryptedPassword = null;
-            if (password) {
-                const encryptFunc = firebase.functions().httpsCallable('encryptSmtpPassword');
-                const result = await encryptFunc({ password: password });
-                encryptedPassword = result.data.encryptedPassword;
-            } else {
-                // Keep existing password if not changed
-                const existingDoc = await db.collection('adminSettings').doc('emailConfig').get();
-                if (existingDoc.exists) {
-                    encryptedPassword = existingDoc.data().senderPassword;
-                }
-            }
-            
-            if (!encryptedPassword) {
-                this.showAdminMessage('❌ Failed to encrypt password', 'error');
-                return;
-            }
-            
-            // Save to Firestore
-            await db.collection('adminSettings').doc('emailConfig').set({
+            // Prepare data for backend API
+            const configData = {
                 smtpHost: host,
                 smtpPort: port,
                 senderEmail: email,
-                senderPassword: encryptedPassword,
-                isConfigured: enabled,
-                configuredBy: this.userEmail,
-                configuredAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastTested: firebase.firestore.FieldValue.serverTimestamp()
-            });
+                enabled: enabled
+            };
+            
+            // Only include password if it was entered
+            if (password) {
+                configData.senderPassword = password;
+            }
+            
+            // Call backend API to save configuration
+            await callBackendAPI('/api/admin/email-config', 'POST', configData);
             
             // Clear password field
             document.getElementById('admin-sender-password').value = '';
@@ -274,14 +306,13 @@ class WaterIntakeTracker {
             if (testEmail) {
                 // Send test email
                 this.showAdminMessage('⏳ Sending test email...', 'info');
-                const testFunc = firebase.functions().httpsCallable('testAdminSmtpConfig');
-                const testResult = await testFunc();
-                this.showAdminMessage('✅ ' + testResult.data.message, 'success');
+                const testResult = await callBackendAPI('/api/email/test', 'POST');
+                this.showAdminMessage('✅ ' + testResult.message, 'success');
             } else {
                 this.showAdminMessage('✅ Configuration saved successfully!', 'success');
             }
             
-            // Reload config and email config
+            // Reload config
             await this.loadAdminConfig();
             await this.loadEmailConfig();
             
@@ -1456,17 +1487,16 @@ class WaterIntakeTracker {
         try {
             // Check if SMTP is configured
             const config = this.emailConfig;
-            if (!config || !config.isConfigured) {
+            if (!config || !config.enabled) {
                 this.showTestMessage('❌ Email system not configured. Contact administrator.', 'error');
                 return;
             }
             
-            // Call Cloud Function to send test email
-            const sendTestFunc = firebase.functions().httpsCallable('sendTestEmail');
-            const result = await sendTestFunc();
+            // Call backend API to send test email
+            const result = await callBackendAPI('/api/email/test', 'POST');
             
             this.showTestMessage(
-                '✅ ' + result.data.message,
+                '✅ ' + result.message,
                 'success'
             );
             
