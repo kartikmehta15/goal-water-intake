@@ -262,9 +262,9 @@ When adding features or making changes:
 
 1. User signs up/signs in
 2. Firebase creates authentication token
-3. Token stored in browser (httpOnly cookie)
+3. Token stored in browser's localStorage or sessionStorage
 4. All Firestore operations use this token
-5. Token refreshed automatically
+5. Token refreshed automatically by Firebase SDK
 
 ### Cloud Functions
 
