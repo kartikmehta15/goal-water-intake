@@ -5,6 +5,12 @@ const nodemailer = require('nodemailer');
 admin.initializeApp();
 const db = admin.firestore();
 
+// Admin email configuration
+// Priority: Firebase config > Default fallback
+// Set via: firebase functions:config:set admin.email="your-email@example.com"
+// The default fallback matches the admin email in firestore.rules and script.js ADMIN_EMAIL
+const ADMIN_EMAIL = functions.config().admin?.email || 'kartikmehta15@gmail.com';
+
 // Get Gmail SMTP credentials from Firebase config
 const gmailUser = functions.config().gmail?.user;
 const gmailPass = functions.config().gmail?.pass;
@@ -285,7 +291,7 @@ exports.verifyPowerUserCode = functions.https.onCall(async (data, context) => {
     return { verified: verified };
 });
 
-// HTTP CALLABLE FUNCTION - Send Test Email
+// HTTP CALLABLE FUNCTION - Send Test Email (Admin Only)
 exports.sendTestEmail = functions.https.onCall(async (data, context) => {
     // Verify authentication
     if (!context.auth) {
@@ -295,13 +301,12 @@ exports.sendTestEmail = functions.https.onCall(async (data, context) => {
     const userId = context.auth.uid;
     const userEmail = context.auth.token.email;
     
-    // Verify power user status
-    const userDoc = await db.collection('users').doc(userId).get();
-    if (!userDoc.exists || !userDoc.data().powerUserVerified) {
-        throw new functions.https.HttpsError('permission-denied', 'Power user verification required');
+    // Verify admin status
+    if (userEmail !== ADMIN_EMAIL) {
+        throw new functions.https.HttpsError('permission-denied', 'Test email is restricted to administrators only');
     }
     
-    console.log(`Test email requested by ${userEmail}`);
+    console.log(`Test email requested by admin ${userEmail}`);
     
     try {
         // Get user's current progress

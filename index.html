@@ -305,6 +305,23 @@ Stay hydrated! 💪
 <a href="{{website_url}}">Update your intake</a></pre>
                             </div>
                         </details>
+                        
+                        <!-- Test Email Section (Admin Only) -->
+                        <div class="settings-group admin-only-feature" style="margin-top: 30px;">
+                            <h4>🧪 Test Email Delivery (Admin Only)</h4>
+                            <p class="settings-description">Send a test reminder email to verify the email system is working correctly</p>
+                            
+                            <div class="test-email-info">
+                                <p>Test email will be sent via Firebase Cloud Functions using Gmail SMTP</p>
+                                <p>Email will be sent to: <strong id="admin-test-email-address"></strong></p>
+                                <p class="test-note">The email will show your current progress and be marked as a TEST email.</p>
+                            </div>
+                            
+                            <button id="send-test-email-btn" class="btn-secondary">
+                                📨 Send Test Email Now
+                            </button>
+                            <div class="test-message" id="test-message"></div>
+                        </div>
                     </div>
                 </div>
                 
@@ -499,22 +516,6 @@ Stay hydrated! 💪
                             </div>
 
                             <button id="save-settings-btn" class="btn-primary">💾 Save Settings</button>
-                        </div>
-                        
-                        <!-- Test Email Section -->
-                        <div class="settings-group" style="margin-top: 30px;">
-                            <h4>🧪 Test Email Delivery</h4>
-                            <p class="settings-description">Send a test reminder email to verify your setup is working correctly</p>
-                            
-                            <div class="test-email-info">
-                                <p>Test email will be sent to: <strong id="test-email-address"></strong></p>
-                                <p class="test-note">The email will show your current progress and include a link to the website.</p>
-                            </div>
-                            
-                            <button id="send-test-email-btn" class="btn-secondary">
-                                📨 Send Test Email Now
-                            </button>
-                            <div class="test-message" id="test-message"></div>
                         </div>
                     </div>
                 </div>
