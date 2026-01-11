@@ -47,6 +47,14 @@ app.post('/api/admin/email-config', verifyFirebaseToken, verifyAdmin, async (req
             });
         }
         
+        // Validate password format (Gmail App Passwords are 16 characters)
+        if (senderPassword.length < 8) {
+            return res.status(400).json({ 
+                error: 'Invalid password',
+                message: 'Password must be at least 8 characters long'
+            });
+        }
+        
         // Encrypt the password before storing
         const encryptedPassword = encryptPassword(senderPassword);
         

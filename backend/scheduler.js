@@ -84,7 +84,8 @@ async function checkAndSendReminders() {
             // Check if user has reminders array (new format)
             if (user.reminders && Array.isArray(user.reminders)) {
                 for (const reminder of user.reminders) {
-                    const reminderTime = reminder.time || (reminder.type === 'preset' ? reminder.time : reminder.customTime);
+                    // The reminder.time field contains the actual time (HH:MM)
+                    const reminderTime = reminder.time;
                     
                     if (shouldSendReminder(reminderTime, currentHour, currentMinute)) {
                         console.log(`Sending reminder to ${user.email} at ${reminderTime}`);

@@ -7,6 +7,12 @@ const BACKEND_URL = window.location.hostname === 'localhost' || window.location.
     ? 'http://localhost:3000'
     : 'https://your-backend-url.com'; // UPDATE THIS with your deployed backend URL
 
+// Validate BACKEND_URL is configured
+if (BACKEND_URL.includes('your-backend-url.com')) {
+    console.warn('⚠️ BACKEND_URL not configured! Email functionality will not work.');
+    console.warn('Update BACKEND_URL in script.js with your deployed backend URL.');
+}
+
 // Admin email - Replace with your actual email address
 // NOTE: For production with multiple admins, consider using Firebase custom claims
 // or a Firestore collection to manage admin users. This simple approach works for

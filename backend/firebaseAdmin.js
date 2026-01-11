@@ -16,8 +16,8 @@ const initializeFirebaseAdmin = () => {
         };
 
         // Only initialize if we have valid-looking credentials
-        if (!serviceAccount.projectId || !serviceAccount.clientEmail) {
-            console.warn('Firebase Admin SDK not initialized - missing credentials');
+        if (!serviceAccount.projectId || !serviceAccount.clientEmail || !serviceAccount.privateKey) {
+            console.warn('Firebase Admin SDK not initialized - missing credentials (projectId, clientEmail, or privateKey)');
             return null;
         }
 
