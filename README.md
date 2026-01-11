@@ -30,13 +30,13 @@ A beautiful, interactive web application to track your daily water consumption a
 
 ### Email Notifications (NEW!)
 - **📧 Smart Email Reminders**: Receive email reminders throughout the day to stay hydrated
-- **👨‍💼 Admin Configuration**: One-time SMTP setup by admin (supports Gmail, Sendinblue, Outlook)
-- **🔐 Encrypted Storage**: SMTP passwords encrypted with AES-256-CBC
+- **👨‍💼 Admin Configuration**: One-time SMTP setup by admin (supports Gmail, Outlook, or any SMTP)
+- **🔐 Secure Storage**: SMTP passwords encrypted with AES-256-CBC in Firestore
 - **⏰ Flexible Scheduling**: Configure up to 5 custom reminder times (preset or custom)
 - **🧪 Test Email**: Verify email setup with test email functionality
-- **🌍 Timezone-Aware**: Reminders sent based on your local timezone
-- **💸 Zero Cost**: Free tier - Gmail allows 500 emails/day
-- **📍 No Credit Card**: Uses free SMTP providers, no payment required
+- **💸 Zero Cost**: Free tier - Gmail allows 500 emails/day, no credit card required
+- **🖥️ Backend API**: Runs on free hosting (Render, Railway, or Fly.io)
+- **📍 Easy Setup**: 15-minute setup, see [BACKEND_SETUP.md](BACKEND_SETUP.md)
 
 For detailed setup instructions, see [GMAIL_SMTP_SETUP.md](GMAIL_SMTP_SETUP.md)
 
@@ -114,23 +114,27 @@ const firebaseConfig = {
 };
 ```
 
-### Step 7: Deploy Cloud Functions (Optional - for Email Notifications)
+### Step 7: Set Up Backend for Email Notifications (Optional)
 
-If you want to enable email notifications:
+If you want email notifications and reminders:
 
-1. Install dependencies:
-   ```bash
-   cd functions
-   npm install
-   cd ..
-   ```
+1. The backend is a separate Node.js/Express server (no credit card required!)
+2. See [BACKEND_SETUP.md](BACKEND_SETUP.md) for complete setup instructions
+3. You'll need:
+   - Gmail account with App Password (free, 500 emails/day)
+   - Free hosting (Render.com, Railway.app, or Fly.io)
+   - 15 minutes for setup
 
-2. Deploy functions:
-   ```bash
-   firebase deploy --only functions
-   ```
+**Quick start:**
+```bash
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your Firebase credentials
+npm start
+```
 
-3. Configure email settings via admin panel (see [GMAIL_SMTP_SETUP.md](GMAIL_SMTP_SETUP.md))
+Then configure SMTP via the admin panel in Settings.
 
 ### Step 8: Deploy the Application
 
@@ -153,7 +157,7 @@ You have several options:
 3. Go to repository Settings > Pages
 4. Select your branch and save
 
-**Note:** Email notifications require Cloud Functions, which won't work with GitHub Pages alone. Use Firebase Hosting if you want email notifications.
+**Note:** Email notifications require a separate backend server (Node.js/Express). See [BACKEND_SETUP.md](BACKEND_SETUP.md) for setup instructions. The frontend works on GitHub Pages, but the backend needs to be deployed separately (free options available).
 
 #### Option C: Local Development
 1. Use a local web server (e.g., `python -m http.server` or VS Code Live Server)
@@ -258,7 +262,10 @@ The app features 31 different creatures and plants that rotate daily:
 - **Frontend**: Pure HTML/CSS/JavaScript (no frameworks or build tools)
 - **Authentication**: Firebase Authentication
 - **Database**: Cloud Firestore
-- **Hosting**: Firebase Hosting (recommended) or any static host
+- **Backend**: Node.js/Express (for email notifications)
+- **Email Service**: Nodemailer with Gmail SMTP (or any SMTP provider)
+- **Scheduler**: Node-cron for reminder emails
+- **Hosting**: Firebase Hosting or GitHub Pages (frontend), Render/Railway/Fly.io (backend)
 - **Offline Support**: Firestore offline persistence enabled
 
 ### Architecture
@@ -319,6 +326,7 @@ Works on all modern browsers that support:
 
 ## Files
 
+### Frontend
 - `index.html` - Main application page
 - `auth.html` - Authentication page (login/signup)
 - `script.js` - Application logic and Firestore integration
@@ -327,6 +335,17 @@ Works on all modern browsers that support:
 - `auth.css` - Authentication page styling
 - `firestore.rules` - Firestore security rules
 - `README.md` - This documentation
+
+### Backend (Optional - for Email Notifications)
+- `backend/server.js` - Express API server
+- `backend/emailService.js` - Nodemailer email sending
+- `backend/scheduler.js` - Node-cron reminder scheduler
+- `backend/firebaseAdmin.js` - Firebase Admin SDK
+- `backend/middleware/auth.js` - Authentication middleware
+- `backend/middleware/adminCheck.js` - Admin verification
+- `backend/package.json` - Backend dependencies
+- `backend/README.md` - Backend documentation
+- `BACKEND_SETUP.md` - Backend setup guide
 
 ## Contributing
 
