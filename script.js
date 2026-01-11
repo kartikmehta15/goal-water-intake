@@ -13,9 +13,7 @@ const ADMIN_EMAIL = 'kartikmehta15@gmail.com';
 // The code provides basic access control for email features.
 const POWER_USER_CODE = 'WATER-HYDRO-2026-PWR9';
 
-// Email reminder configuration constants
-const REMINDER_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-const REMINDER_WINDOW_MS = 5 * 60 * 1000; // 5 minute window to catch reminders
+// Test message timeout
 const TEST_MESSAGE_TIMEOUT_MS = 8000; // 8 seconds
 
 class WaterIntakeTracker {
@@ -26,7 +24,6 @@ class WaterIntakeTracker {
         this.data = {};
         this.unsubscribe = null; // For Firestore listener cleanup
         this.previousPercentage = 0; // Track previous percentage for confetti
-        this.emailjsInitialized = false; // Track EmailJS initialization state
         this.isAdmin = false; // Track if current user is admin
         this.emailConfig = null; // Global email configuration from Firestore
         this.creatures = [
@@ -118,14 +115,8 @@ class WaterIntakeTracker {
             this.initializeExportDates();
             await this.initializeSettings();
             
-            // Initialize EmailJS if configured
-            this.initializeEmailJS();
-            
-            // Check for scheduled reminders on app load
-            this.checkScheduledReminders();
-            
-            // Check reminders every 5 minutes while app is open
-            setInterval(() => this.checkScheduledReminders(), REMINDER_CHECK_INTERVAL_MS);
+            // Note: Email reminders are now handled by Cloud Functions (scheduled hourly)
+            // No client-side email checking needed
         } catch (error) {
             console.error('Initialization error:', error);
             this.showToast('error', 'Error', 'Failed to initialize app. Please refresh the page.');
@@ -319,41 +310,6 @@ class WaterIntakeTracker {
         }
     }
     
-    // EmailJS Integration Methods (kept for backward compatibility, but not used)
-    
-    initializeEmailJS() {
-        // Prevent duplicate initialization
-        if (this.emailjsInitialized) {
-            return true;
-        }
-        
-        // Use Firestore config (loaded from /config/emailjs document)
-        const config = this.emailConfig || this.getEmailJSConfig();
-        if (config && config.publicKey) {
-            try {
-                if (typeof emailjs !== 'undefined') {
-                    emailjs.init(config.publicKey);
-                    this.emailjsInitialized = true;
-                    console.log('EmailJS initialized successfully');
-                    return true;
-                } else {
-                    console.error('EmailJS library not loaded');
-                    return false;
-                }
-            } catch (error) {
-                console.error('Failed to initialize EmailJS:', error);
-                return false;
-            }
-        }
-        return false;
-    }
-    
-    getEmailJSConfig() {
-        // EmailJS config is now centrally managed via Firestore
-        // Return null to force usage of this.emailConfig from Firestore
-        return null;
-    }
-    
     getCurrentProgress() {
         const dateKey = this.getDateKey(new Date());
         const dayData = this.data[dateKey] || { intake: 0, goal: this.defaultGoal };
@@ -368,129 +324,12 @@ class WaterIntakeTracker {
         };
     }
     
-    async sendEmailReminder(reminderTime) {
-        // Use Firestore config if available, otherwise fall back to localStorage
-        const config = this.emailConfig || this.getEmailJSConfig();
-        if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
-            console.error('EmailJS not configured');
-            return false;
-        }
-        
-        // Check if email system is enabled (for Firestore config)
-        if (this.emailConfig && !this.emailConfig.enabled) {
-            console.error('Email system is disabled by administrator');
-            return false;
-        }
-        
-        // Initialize EmailJS if needed
-        this.initializeEmailJS();
-        
-        const progress = this.getCurrentProgress();
-        
-        const templateParams = {
-            to_email: this.userEmail,
-            to_name: this.userEmail.split('@')[0] || 'there',
-            reminder_time: reminderTime,
-            current_amount: progress.amount,
-            goal_amount: progress.goal,
-            percentage: progress.percentage,
-            website_url: window.location.origin + window.location.pathname
-        };
-        
-        try {
-            const response = await emailjs.send(
-                config.serviceId,
-                config.templateId,
-                templateParams
-            );
-            console.log('Email sent successfully:', response);
-            return true;
-        } catch (error) {
-            console.error('Email error:', error);
-            return false;
-        }
-    }
-    
+    // Client-side reminder checking is no longer needed since we use Cloud Functions
+    // Keeping this method stub for backward compatibility
     async checkScheduledReminders() {
-        if (!this.userEmail) return;
-        
-        // Check if EmailJS is configured (Firestore or localStorage)
-        const config = this.emailConfig || this.getEmailJSConfig();
-        if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
-            return;
-        }
-        
-        // Check if email system is enabled (for Firestore config)
-        if (this.emailConfig && !this.emailConfig.enabled) {
-            return;
-        }
-        
-        try {
-            const userDoc = await db.collection('users').doc(this.userId).get();
-            if (!userDoc.exists) return;
-            
-            const settings = userDoc.data();
-            if (!settings || !settings.notificationsEnabled) return;
-            
-            const now = new Date();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            const today = now.toISOString().split('T')[0];
-            
-            // Get last check time from localStorage
-            const lastCheck = localStorage.getItem('lastReminderCheck');
-            const lastCheckDate = lastCheck ? new Date(lastCheck) : new Date(0);
-            
-            // Check each reminder (1-5)
-            for (let i = 1; i <= 5; i++) {
-                const reminderKey = `reminder${i}`;
-                const reminder = settings[reminderKey];
-                
-                if (!reminder || !reminder.enabled) continue;
-                
-                // Parse reminder time
-                let reminderHour, reminderMinute;
-                if (reminder.preset === 'custom' && reminder.custom) {
-                    const [hour, minute] = reminder.custom.split(':');
-                    reminderHour = parseInt(hour);
-                    reminderMinute = parseInt(minute);
-                } else if (reminder.preset) {
-                    const [hour, minute] = reminder.preset.split(':');
-                    reminderHour = parseInt(hour);
-                    reminderMinute = parseInt(minute) || 0;
-                } else {
-                    continue;
-                }
-                
-                const reminderTime = new Date(now);
-                reminderTime.setHours(reminderHour, reminderMinute, 0, 0);
-                
-                // If reminder time is between last check and now (or just passed)
-                const timeDiff = now - reminderTime;
-                if (timeDiff >= 0 && timeDiff < REMINDER_WINDOW_MS && reminderTime > lastCheckDate) {
-                    // Check if already sent today
-                    const sentKey = `reminder_sent_${reminderHour}_${reminderMinute}`;
-                    const sentToday = localStorage.getItem(sentKey);
-                    
-                    if (sentToday !== today) {
-                        // Send reminder
-                        const timeLabel = `${String(reminderHour).padStart(2, '0')}:${String(reminderMinute).padStart(2, '0')}`;
-                        const success = await this.sendEmailReminder(timeLabel);
-                        
-                        if (success) {
-                            // Mark as sent
-                            localStorage.setItem(sentKey, today);
-                            console.log(`Reminder sent at ${timeLabel}`);
-                        }
-                    }
-                }
-            }
-            
-            // Update last check time
-            localStorage.setItem('lastReminderCheck', now.toISOString());
-        } catch (error) {
-            console.error('Error checking scheduled reminders:', error);
-        }
+        // Reminders are now handled by Cloud Functions scheduled hourly
+        // This method is kept as a stub for backward compatibility
+        return;
     }
 
     setupUserProfile() {
