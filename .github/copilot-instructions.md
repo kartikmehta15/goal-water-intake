@@ -78,10 +78,11 @@ This is a water intake tracking web application that helps users monitor their d
 
 ### Firebase Integration
 
-1. **Security First**:
-   - Never commit actual Firebase API keys to the repository
-   - Keep `firebaseConfig` in `auth.js` with placeholder values
-   - Use environment variables for production deployments
+1. **Configuration**:
+   - Firebase config is stored in `auth.js` (lines 4-11)
+   - **Note**: This repository currently has Firebase API keys committed for demo purposes
+   - For production forks: Replace with your own Firebase project credentials
+   - Firebase API keys are safe to expose client-side as they're restricted by domain and security rules
 2. **Firestore Structure**:
    - Collection: `users/{userId}/waterIntake/{dateId}`
    - Document fields: `date`, `intake`, `goal`, `timestamp`
@@ -260,10 +261,10 @@ When adding features or making changes:
 
 ### Authentication Flow
 
-1. User signs up/signs in
-2. Firebase creates authentication token
-3. Token stored in browser's localStorage or sessionStorage
-4. All Firestore operations use this token
+1. User signs up/signs in via Firebase Authentication
+2. Firebase SDK creates and manages authentication token
+3. Token stored automatically by Firebase SDK (using IndexedDB with localStorage fallback)
+4. All Firestore operations authenticate using this managed token
 5. Token refreshed automatically by Firebase SDK
 
 ### Cloud Functions
@@ -276,10 +277,10 @@ When adding features or making changes:
 ## Version Compatibility
 
 - **Node.js**: 16.x (for Cloud Functions)
-- **Firebase SDK**: v10+
+- **Firebase SDK**: 10.7.1 (loaded via CDN in HTML files)
 - **Browsers**: Modern browsers supporting ES6+ and CSS Grid
-- **Firebase Admin SDK**: ^11.0.0
-- **Firebase Functions SDK**: ^4.0.0
+- **Firebase Admin SDK**: ^11.0.0 (for Cloud Functions)
+- **Firebase Functions SDK**: ^4.0.0 (for Cloud Functions)
 
 ## Support and Resources
 
