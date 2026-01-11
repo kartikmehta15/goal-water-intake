@@ -1710,3 +1710,58 @@ input:checked + .slider:before {
     border: 1px solid #f5c6cb;
     display: block;
 }
+
+.admin-config-message.info {
+    background: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+    display: block;
+}
+
+/* SMTP Config specific styles */
+.smtp-config {
+    margin-top: 20px;
+}
+
+.field-hint {
+    display: block;
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 4px;
+    font-style: italic;
+}
+
+.field-hint a {
+    color: #4A90E2;
+    text-decoration: underline;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.admin-actions button {
+    flex: 1;
+    min-width: 200px;
+}
+
+.guide-content {
+    padding: 15px 0;
+}
+
+.guide-content h4 {
+    color: #4A90E2;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+.guide-note {
+    background: #d4edda;
+    border-left: 4px solid #28a745;
+    padding: 12px;
+    margin-top: 15px;
+    border-radius: 4px;
+}

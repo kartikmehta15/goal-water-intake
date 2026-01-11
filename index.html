@@ -230,38 +230,50 @@
             <section class="tab-content" id="tab-settings">
                 <h2>⚙️ Settings</h2>
                 
-                <!-- Admin-Only EmailJS Configuration -->
+                <!-- Admin-Only SMTP Configuration -->
                 <div class="admin-section" id="admin-section" style="display: none;">
                     <div class="admin-badge">👨‍💼 Administrator Controls</div>
                     
                     <div class="settings-card admin-card">
-                        <h3>⚙️ EmailJS Configuration (Admin Only)</h3>
-                        <p class="admin-description">Configure EmailJS once for all users. Regular users will only need to enable notifications and set times.</p>
+                        <h3>📧 Email SMTP Configuration (Admin Only)</h3>
+                        <p class="admin-description">Configure SMTP settings once for all users. Uses Gmail SMTP or any other SMTP provider. Regular users will only need to enable notifications and set reminder times.</p>
                         
-                        <div class="emailjs-config">
+                        <div class="smtp-config">
                             <div class="config-field">
-                                <label for="admin-emailjs-service-id">Service ID:</label>
-                                <input type="text" id="admin-emailjs-service-id" class="config-input" placeholder="service_xxxxxxx" />
+                                <label for="admin-smtp-host">SMTP Host:</label>
+                                <input type="text" id="admin-smtp-host" class="config-input" placeholder="smtp.gmail.com" />
+                                <small class="field-hint">For Gmail: smtp.gmail.com</small>
                             </div>
                             
                             <div class="config-field">
-                                <label for="admin-emailjs-template-id">Template ID:</label>
-                                <input type="text" id="admin-emailjs-template-id" class="config-input" placeholder="template_xxxxxxx" />
+                                <label for="admin-smtp-port">SMTP Port:</label>
+                                <input type="number" id="admin-smtp-port" class="config-input" placeholder="587" value="587" />
+                                <small class="field-hint">Common ports: 587 (TLS), 465 (SSL), 25</small>
                             </div>
                             
                             <div class="config-field">
-                                <label for="admin-emailjs-public-key">Public Key:</label>
-                                <input type="text" id="admin-emailjs-public-key" class="config-input" placeholder="public_xxxxxxx" />
+                                <label for="admin-sender-email">Sender Email Address:</label>
+                                <input type="email" id="admin-sender-email" class="config-input" placeholder="your-email@gmail.com" />
+                                <small class="field-hint">The email address that will send notifications</small>
+                            </div>
+                            
+                            <div class="config-field">
+                                <label for="admin-sender-password">Email Password / App Password:</label>
+                                <input type="password" id="admin-sender-password" class="config-input" placeholder="••••••••••••••••" />
+                                <small class="field-hint">⚠️ For Gmail, use an <a href="https://myaccount.google.com/apppasswords" target="_blank">App Password</a>, not your regular password</small>
                             </div>
                             
                             <div class="config-field">
                                 <label class="checkbox-label">
-                                    <input type="checkbox" id="admin-emailjs-enabled" />
+                                    <input type="checkbox" id="admin-smtp-enabled" />
                                     <span>Enable email system for all users</span>
                                 </label>
                             </div>
                             
-                            <button id="save-admin-config-btn" class="btn-primary">💾 Save Admin Configuration</button>
+                            <div class="admin-actions">
+                                <button id="save-admin-smtp-btn" class="btn-primary">💾 Save Configuration</button>
+                                <button id="test-admin-smtp-btn" class="btn-secondary">🧪 Save & Test Email</button>
+                            </div>
                             <div class="admin-config-message" id="admin-config-message"></div>
                         </div>
                         
@@ -269,40 +281,68 @@
                             <h4>Current Configuration Status:</h4>
                             <div class="status-info" id="status-info">
                                 <p>Status: <span id="config-status">Not configured</span></p>
+                                <p>SMTP Host: <span id="config-smtp-host">-</span></p>
+                                <p>Sender Email: <span id="config-sender-email">-</span></p>
                                 <p>Configured by: <span id="config-admin">-</span></p>
                                 <p>Last updated: <span id="config-updated">-</span></p>
                             </div>
                         </div>
                         
-                        <!-- EmailJS Setup Guide -->
+                        <!-- Gmail SMTP Setup Guide -->
                         <details class="admin-guide">
-                            <summary><strong>📖 How to Set Up EmailJS (5 minutes)</strong></summary>
-                            <ol class="setup-steps">
-                                <li>Go to <a href="https://www.emailjs.com" target="_blank">EmailJS.com</a> and sign up (free)</li>
-                                <li>Add Gmail service and authorize</li>
-                                <li>Create email template (see below)</li>
-                                <li>Copy Service ID, Template ID, and Public Key</li>
-                                <li>Paste them above and click Save</li>
-                                <li>Enable the system for all users</li>
-                            </ol>
-                            
-                            <div class="template-example">
-                                <p><strong>Email Template:</strong></p>
-                                <pre>Subject: {{reminder_time}} - Time to Hydrate! 💧
-
-Body:
-Hi {{to_name}}! 👋
-
-Reminder to drink water!
-
-Today's Progress:
-🚰 Current: {{current_amount}} ml
-🎯 Goal: {{goal_amount}} ml
-📊 Progress: {{percentage}}%
-
-Stay hydrated! 💪
-
-<a href="{{website_url}}">Update your intake</a></pre>
+                            <summary><strong>📖 Gmail SMTP Setup Guide (5 minutes)</strong></summary>
+                            <div class="guide-content">
+                                <h4>Step 1: Enable 2-Step Verification</h4>
+                                <ol class="setup-steps">
+                                    <li>Visit <a href="https://myaccount.google.com/security" target="_blank">Google Account Security</a></li>
+                                    <li>Find "2-Step Verification" and enable it</li>
+                                    <li>Complete the verification process</li>
+                                </ol>
+                                
+                                <h4>Step 2: Generate App Password</h4>
+                                <ol class="setup-steps">
+                                    <li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank">App Passwords</a></li>
+                                    <li>Select app: <strong>Mail</strong></li>
+                                    <li>Select device: <strong>Other</strong> (name it "Water Tracker")</li>
+                                    <li>Click <strong>Generate</strong></li>
+                                    <li>Copy the 16-character password (remove spaces)</li>
+                                </ol>
+                                
+                                <h4>Step 3: Configure Above</h4>
+                                <ul class="setup-steps">
+                                    <li><strong>SMTP Host:</strong> smtp.gmail.com</li>
+                                    <li><strong>SMTP Port:</strong> 587</li>
+                                    <li><strong>Email:</strong> your-email@gmail.com</li>
+                                    <li><strong>Password:</strong> Paste the 16-character App Password</li>
+                                </ul>
+                                
+                                <h4>Step 4: Test</h4>
+                                <p>Click "Save & Test Email" to verify your configuration. You should receive a test email within seconds.</p>
+                                
+                                <div class="guide-note">
+                                    <strong>✅ Free Forever:</strong> Gmail allows 500 emails/day for free (no credit card needed)
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <!-- Alternative SMTP Providers -->
+                        <details class="admin-guide">
+                            <summary><strong>🔄 Other SMTP Providers</strong></summary>
+                            <div class="guide-content">
+                                <h4>Sendinblue (Brevo)</h4>
+                                <ul class="setup-steps">
+                                    <li><strong>Host:</strong> smtp-relay.sendinblue.com</li>
+                                    <li><strong>Port:</strong> 587</li>
+                                    <li><strong>Free tier:</strong> 300 emails/day</li>
+                                    <li><a href="https://www.sendinblue.com/" target="_blank">Sign up here</a></li>
+                                </ul>
+                                
+                                <h4>Outlook/Hotmail</h4>
+                                <ul class="setup-steps">
+                                    <li><strong>Host:</strong> smtp-mail.outlook.com</li>
+                                    <li><strong>Port:</strong> 587</li>
+                                    <li><strong>Free tier:</strong> Personal use</li>
+                                </ul>
                             </div>
                         </details>
                     </div>

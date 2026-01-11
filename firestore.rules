@@ -45,6 +45,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // Admin SMTP settings (admin-only read/write)
+    match /adminSettings/{document} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
     // Deny all other requests by default
     match /{document=**} {
       allow read, write: if false;

@@ -1,27 +1,76 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 admin.initializeApp();
 const db = admin.firestore();
 
-// Get Gmail SMTP credentials from Firebase config
-const gmailUser = functions.config().gmail?.user;
-const gmailPass = functions.config().gmail?.pass;
+// Encryption key for storing SMTP password (derived from Firebase project ID for simplicity)
+// In production, consider using Google Cloud Secret Manager
+const ENCRYPTION_KEY = crypto.createHash('sha256')
+    .update(process.env.GCLOUD_PROJECT || 'default-project')
+    .digest('base64')
+    .substr(0, 32);
 
-// Create Nodemailer transporter for Gmail SMTP
-let transporter = null;
-if (gmailUser && gmailPass) {
-    transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-            user: gmailUser,
-            pass: gmailPass
+// Helper function to decrypt password
+function decryptPassword(encryptedPassword) {
+    try {
+        const parts = encryptedPassword.split(':');
+        const iv = Buffer.from(parts[0], 'hex');
+        const encrypted = Buffer.from(parts[1], 'hex');
+        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+        let decrypted = decipher.update(encrypted);
+        decrypted = Buffer.concat([decrypted, decipher.final()]);
+        return decrypted.toString();
+    } catch (error) {
+        console.error('Error decrypting password:', error);
+        return null;
+    }
+}
+
+// Get SMTP transporter from Firestore configuration
+async function getTransporter() {
+    try {
+        const configDoc = await db.collection('adminSettings').doc('emailConfig').get();
+        
+        if (!configDoc.exists) {
+            console.warn('SMTP configuration not found in Firestore');
+            return null;
         }
-    });
-    console.log('Gmail SMTP transporter initialized');
-} else {
-    console.warn('Gmail credentials not configured. Email functionality will not work.');
+        
+        const config = configDoc.data();
+        
+        if (!config.isConfigured || !config.smtpHost || !config.senderEmail || !config.senderPassword) {
+            console.warn('SMTP configuration incomplete');
+            return null;
+        }
+        
+        // Decrypt password
+        const password = decryptPassword(config.senderPassword);
+        if (!password) {
+            console.error('Failed to decrypt SMTP password');
+            return null;
+        }
+        
+        // Create transporter based on configuration
+        const transportConfig = {
+            host: config.smtpHost,
+            port: config.smtpPort || 587,
+            secure: (config.smtpPort === 465), // true for 465, false for other ports
+            auth: {
+                user: config.senderEmail,
+                pass: password
+            }
+        };
+        
+        const transporter = nodemailer.createTransport(transportConfig);
+        console.log(`SMTP transporter initialized for ${config.smtpHost}`);
+        return transporter;
+    } catch (error) {
+        console.error('Error creating SMTP transporter:', error);
+        return null;
+    }
 }
 
 // Helper function to get user's current progress
@@ -56,11 +105,17 @@ async function getUserProgress(userId) {
 
 // Email sending function using Nodemailer
 async function sendReminderEmail(userEmail, progress, websiteUrl, timeLabel, isTest = false) {
+    const transporter = await getTransporter();
+    
     if (!transporter) {
-        throw new Error('Gmail SMTP not configured');
+        throw new Error('SMTP not configured');
     }
 
     const { amount, goal, percentage } = progress;
+    
+    // Get sender email from config
+    const configDoc = await db.collection('adminSettings').doc('emailConfig').get();
+    const senderEmail = configDoc.exists ? configDoc.data().senderEmail : 'noreply@watertracker.com';
     
     let emoji = '💧';
     let message = 'Time for a water break!';
@@ -158,7 +213,7 @@ async function sendReminderEmail(userEmail, progress, websiteUrl, timeLabel, isT
     
     try {
         await transporter.sendMail({
-            from: `Water Tracker <${gmailUser}>`,
+            from: `Water Tracker <${senderEmail}>`,
             to: userEmail,
             subject: subject,
             html: htmlContent
@@ -322,10 +377,103 @@ exports.sendTestEmail = functions.https.onCall(async (data, context) => {
                 sentTo: userEmail
             };
         } else {
-            throw new functions.https.HttpsError('internal', 'Failed to send email via Gmail SMTP');
+            throw new functions.https.HttpsError('internal', 'Failed to send email via SMTP');
         }
     } catch (error) {
         console.error('Error sending test email:', error);
         throw new functions.https.HttpsError('internal', 'Failed to send test email: ' + error.message);
+    }
+});
+
+// HTTP CALLABLE FUNCTION - Encrypt SMTP Password (Admin only)
+exports.encryptSmtpPassword = functions.https.onCall(async (data, context) => {
+    // Verify authentication
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    }
+    
+    const userEmail = context.auth.token.email;
+    
+    // Check if user is admin (hardcoded for simplicity)
+    const adminEmail = 'kartikmehta15@gmail.com';
+    if (userEmail !== adminEmail) {
+        throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    }
+    
+    const { password } = data;
+    
+    if (!password) {
+        throw new functions.https.HttpsError('invalid-argument', 'Password is required');
+    }
+    
+    try {
+        // Encrypt the password
+        const iv = crypto.randomBytes(16);
+        const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+        let encrypted = cipher.update(password);
+        encrypted = Buffer.concat([encrypted, cipher.final()]);
+        
+        // Return IV and encrypted data as hex strings
+        const encryptedPassword = iv.toString('hex') + ':' + encrypted.toString('hex');
+        
+        return { encryptedPassword: encryptedPassword };
+    } catch (error) {
+        console.error('Error encrypting password:', error);
+        throw new functions.https.HttpsError('internal', 'Failed to encrypt password: ' + error.message);
+    }
+});
+
+// HTTP CALLABLE FUNCTION - Test Admin SMTP Configuration
+exports.testAdminSmtpConfig = functions.https.onCall(async (data, context) => {
+    // Verify authentication
+    if (!context.auth) {
+        throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
+    }
+    
+    const userEmail = context.auth.token.email;
+    
+    // Check if user is admin
+    const adminEmail = 'kartikmehta15@gmail.com';
+    if (userEmail !== adminEmail) {
+        throw new functions.https.HttpsError('permission-denied', 'Admin access required');
+    }
+    
+    console.log(`Admin SMTP test requested by ${userEmail}`);
+    
+    try {
+        // Get transporter from Firestore config
+        const transporter = await getTransporter();
+        
+        if (!transporter) {
+            throw new functions.https.HttpsError('failed-precondition', 'SMTP not configured');
+        }
+        
+        // Test progress data
+        const progress = {
+            amount: 1500,
+            goal: 2000,
+            percentage: 75
+        };
+        
+        // Send test email to admin
+        const success = await sendReminderEmail(
+            userEmail,
+            progress,
+            'https://kartikmehta15.github.io/goal-water-intake/',
+            'Admin Test',
+            true
+        );
+        
+        if (success) {
+            return { 
+                message: 'Test email sent successfully! Check your inbox.',
+                sentTo: userEmail
+            };
+        } else {
+            throw new functions.https.HttpsError('internal', 'Failed to send test email');
+        }
+    } catch (error) {
+        console.error('Error testing SMTP config:', error);
+        throw new functions.https.HttpsError('internal', 'SMTP test failed: ' + error.message);
     }
 });

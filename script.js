@@ -150,7 +150,7 @@ class WaterIntakeTracker {
     // Load global email configuration from Firestore
     async loadEmailConfig() {
         try {
-            const configDoc = await db.collection('config').doc('emailjs').get();
+            const configDoc = await db.collection('adminSettings').doc('emailConfig').get();
             
             if (configDoc.exists) {
                 this.emailConfig = configDoc.data();
@@ -158,7 +158,7 @@ class WaterIntakeTracker {
                 const statusEl = document.getElementById('email-system-status');
                 const userSettingsEl = document.getElementById('user-notification-settings');
                 
-                if (this.emailConfig.enabled) {
+                if (this.emailConfig.isConfigured) {
                     if (statusEl) {
                         statusEl.innerHTML = '<p class="status-success">✅ Email system is active. Configure your reminders below.</p>';
                     }
@@ -181,82 +181,122 @@ class WaterIntakeTracker {
         }
     }
     
-    // Admin: Load admin configuration
+    // Admin: Load admin SMTP configuration
     async loadAdminConfig() {
         try {
-            const configDoc = await db.collection('config').doc('emailjs').get();
+            const configDoc = await db.collection('adminSettings').doc('emailConfig').get();
             
             if (configDoc.exists) {
                 const config = configDoc.data();
                 
-                // Populate admin form
-                const serviceIdEl = document.getElementById('admin-emailjs-service-id');
-                const templateIdEl = document.getElementById('admin-emailjs-template-id');
-                const publicKeyEl = document.getElementById('admin-emailjs-public-key');
-                const enabledEl = document.getElementById('admin-emailjs-enabled');
+                // Populate admin form (don't show password for security)
+                const hostEl = document.getElementById('admin-smtp-host');
+                const portEl = document.getElementById('admin-smtp-port');
+                const emailEl = document.getElementById('admin-sender-email');
+                const enabledEl = document.getElementById('admin-smtp-enabled');
                 
-                if (serviceIdEl) serviceIdEl.value = config.serviceId || '';
-                if (templateIdEl) templateIdEl.value = config.templateId || '';
-                if (publicKeyEl) publicKeyEl.value = config.publicKey || '';
-                if (enabledEl) enabledEl.checked = config.enabled || false;
+                if (hostEl) hostEl.value = config.smtpHost || '';
+                if (portEl) portEl.value = config.smtpPort || 587;
+                if (emailEl) emailEl.value = config.senderEmail || '';
+                if (enabledEl) enabledEl.checked = config.isConfigured || false;
                 
                 // Update status display
                 const statusEl = document.getElementById('config-status');
+                const hostStatusEl = document.getElementById('config-smtp-host');
+                const emailStatusEl = document.getElementById('config-sender-email');
                 const adminEl = document.getElementById('config-admin');
                 const updatedEl = document.getElementById('config-updated');
                 
-                if (statusEl) statusEl.textContent = config.enabled ? '✅ Enabled' : '❌ Disabled';
+                if (statusEl) statusEl.textContent = config.isConfigured ? '✅ Configured' : '❌ Not Configured';
+                if (hostStatusEl) hostStatusEl.textContent = config.smtpHost || '-';
+                if (emailStatusEl) emailStatusEl.textContent = config.senderEmail || '-';
                 if (adminEl) adminEl.textContent = config.configuredBy || '-';
-                if (updatedEl && config.lastUpdated) {
-                    updatedEl.textContent = new Date(config.lastUpdated.toDate()).toLocaleString();
+                if (updatedEl && config.lastTested) {
+                    updatedEl.textContent = new Date(config.lastTested.toDate()).toLocaleString();
                 }
             }
         } catch (error) {
-            console.error('Error loading admin config:', error);
+            console.error('Error loading admin SMTP config:', error);
         }
     }
     
-    // Admin: Save admin configuration
-    async saveAdminConfig() {
+    // Admin: Save admin SMTP configuration
+    async saveAdminSmtpConfig(testEmail = false) {
         if (!this.isAdmin) {
             alert('You must be an administrator to change this configuration.');
             return;
         }
         
-        const serviceId = document.getElementById('admin-emailjs-service-id').value.trim();
-        const templateId = document.getElementById('admin-emailjs-template-id').value.trim();
-        const publicKey = document.getElementById('admin-emailjs-public-key').value.trim();
-        const enabled = document.getElementById('admin-emailjs-enabled').checked;
+        const host = document.getElementById('admin-smtp-host').value.trim();
+        const port = parseInt(document.getElementById('admin-smtp-port').value) || 587;
+        const email = document.getElementById('admin-sender-email').value.trim();
+        const password = document.getElementById('admin-sender-password').value.trim();
+        const enabled = document.getElementById('admin-smtp-enabled').checked;
         
-        if (!serviceId || !templateId || !publicKey) {
-            this.showAdminMessage('Please fill in all configuration fields', 'error');
+        if (!host || !email) {
+            this.showAdminMessage('Please fill in SMTP host and sender email', 'error');
+            return;
+        }
+        
+        if (!password && testEmail) {
+            this.showAdminMessage('Please enter password to save configuration', 'error');
             return;
         }
         
         try {
-            await db.collection('config').doc('emailjs').set({
-                serviceId: serviceId,
-                templateId: templateId,
-                publicKey: publicKey,
-                enabled: enabled,
+            this.showAdminMessage('⏳ Encrypting and saving configuration...', 'info');
+            
+            // Call Cloud Function to encrypt password
+            let encryptedPassword = null;
+            if (password) {
+                const encryptFunc = firebase.functions().httpsCallable('encryptSmtpPassword');
+                const result = await encryptFunc({ password: password });
+                encryptedPassword = result.data.encryptedPassword;
+            } else {
+                // Keep existing password if not changed
+                const existingDoc = await db.collection('adminSettings').doc('emailConfig').get();
+                if (existingDoc.exists) {
+                    encryptedPassword = existingDoc.data().senderPassword;
+                }
+            }
+            
+            if (!encryptedPassword) {
+                this.showAdminMessage('❌ Failed to encrypt password', 'error');
+                return;
+            }
+            
+            // Save to Firestore
+            await db.collection('adminSettings').doc('emailConfig').set({
+                smtpHost: host,
+                smtpPort: port,
+                senderEmail: email,
+                senderPassword: encryptedPassword,
+                isConfigured: enabled,
                 configuredBy: this.userEmail,
                 configuredAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                lastTested: firebase.firestore.FieldValue.serverTimestamp()
             });
             
-            this.showAdminMessage('✅ Configuration saved successfully! All users can now use email reminders.', 'success');
+            // Clear password field
+            document.getElementById('admin-sender-password').value = '';
             
-            // Reload config
-            await this.loadEmailConfig();
+            if (testEmail) {
+                // Send test email
+                this.showAdminMessage('⏳ Sending test email...', 'info');
+                const testFunc = firebase.functions().httpsCallable('testAdminSmtpConfig');
+                const testResult = await testFunc();
+                this.showAdminMessage('✅ ' + testResult.data.message, 'success');
+            } else {
+                this.showAdminMessage('✅ Configuration saved successfully!', 'success');
+            }
+            
+            // Reload config and email config
             await this.loadAdminConfig();
-            
-            // Initialize EmailJS with new config
-            this.emailjsInitialized = false; // Reset initialization state
-            this.initializeEmailJS();
+            await this.loadEmailConfig();
             
         } catch (error) {
-            console.error('Error saving admin config:', error);
-            this.showAdminMessage('❌ Failed to save configuration: ' + error.message, 'error');
+            console.error('Error saving admin SMTP config:', error);
+            this.showAdminMessage('❌ Failed: ' + error.message, 'error');
         }
     }
     
@@ -267,13 +307,19 @@ class WaterIntakeTracker {
             messageEl.className = `admin-config-message ${type}`;
             messageEl.style.display = 'block';
             
-            setTimeout(() => {
-                messageEl.style.display = 'none';
-            }, 5000);
+            // Auto-hide info messages after 3 seconds
+            if (type === 'info') {
+                setTimeout(() => {
+                    // Only hide if still showing the same message
+                    if (messageEl.textContent === message) {
+                        messageEl.style.display = 'none';
+                    }
+                }, 3000);
+            }
         }
     }
     
-    // EmailJS Integration Methods
+    // EmailJS Integration Methods (kept for backward compatibility, but not used)
     
     initializeEmailJS() {
         // Prevent duplicate initialization
@@ -1397,15 +1443,23 @@ class WaterIntakeTracker {
         // Display user email in settings
         document.getElementById('settings-user-email').textContent = this.userEmail;
         
-        // Admin config save button
-        const saveAdminBtn = document.getElementById('save-admin-config-btn');
-        if (saveAdminBtn) {
-            saveAdminBtn.addEventListener('click', () => {
-                this.saveAdminConfig();
+        // Admin SMTP config save button
+        const saveAdminSmtpBtn = document.getElementById('save-admin-smtp-btn');
+        if (saveAdminSmtpBtn) {
+            saveAdminSmtpBtn.addEventListener('click', () => {
+                this.saveAdminSmtpConfig(false);
             });
         }
         
-        // Test email button
+        // Admin SMTP test button
+        const testAdminSmtpBtn = document.getElementById('test-admin-smtp-btn');
+        if (testAdminSmtpBtn) {
+            testAdminSmtpBtn.addEventListener('click', () => {
+                this.saveAdminSmtpConfig(true);
+            });
+        }
+        
+        // User test email button
         const testEmailBtn = document.getElementById('send-test-email-btn');
         if (testEmailBtn) {
             testEmailBtn.addEventListener('click', () => {
@@ -1561,31 +1615,32 @@ class WaterIntakeTracker {
         }
         
         try {
-            // Check if EmailJS is configured (Firestore or localStorage)
-            const config = this.emailConfig || this.getEmailJSConfig();
-            if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
-                this.showTestMessage('❌ Please configure EmailJS settings first', 'error');
+            // Check if SMTP is configured
+            const config = this.emailConfig;
+            if (!config || !config.isConfigured) {
+                this.showTestMessage('❌ Email system not configured. Contact administrator.', 'error');
                 return;
             }
             
-            // Check if email system is enabled (for Firestore config)
-            if (this.emailConfig && !this.emailConfig.enabled) {
-                this.showTestMessage('❌ Email system is currently disabled by administrator', 'error');
-                return;
-            }
+            // Call Cloud Function to send test email
+            const sendTestFunc = firebase.functions().httpsCallable('sendTestEmail');
+            const result = await sendTestFunc();
             
-            // Send test email
-            const success = await this.sendEmailReminder('TEST');
+            this.showTestMessage(
+                '✅ ' + result.data.message,
+                'success'
+            );
             
-            if (success) {
-                this.showTestMessage(
-                    '✅ Test email sent successfully! Check your inbox (and spam folder).',
-                    'success'
-                );
-            } else {
-                this.showTestMessage(
-                    '❌ Failed to send test email. Please check your EmailJS configuration.',
-                    'error'
+        } catch (error) {
+            console.error('Test email error:', error);
+            this.showTestMessage(`❌ Error: ${error.message}`, 'error');
+            
+        } finally {
+            // Restore button state
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
                 );
             }
             
