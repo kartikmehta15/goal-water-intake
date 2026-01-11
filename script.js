@@ -1480,19 +1480,6 @@ class WaterIntakeTracker {
             btn.innerHTML = originalText;
         }
     }
-                );
-            }
-            
-        } catch (error) {
-            console.error('Test email error:', error);
-            this.showTestMessage(`❌ Error: ${error.message}`, 'error');
-            
-        } finally {
-            // Restore button state
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-    }
 
     showTestMessage(message, type) {
         const messageEl = document.getElementById('test-message');

@@ -6,12 +6,15 @@ const crypto = require('crypto');
 admin.initializeApp();
 const db = admin.firestore();
 
-// Encryption key for storing SMTP password (derived from Firebase project ID for simplicity)
+// Admin email constant (must match ADMIN_EMAIL in script.js)
+const ADMIN_EMAIL = 'kartikmehta15@gmail.com';
+
+// Encryption key for storing SMTP password (derived from Firebase project ID)
 // In production, consider using Google Cloud Secret Manager
 const ENCRYPTION_KEY = crypto.createHash('sha256')
     .update(process.env.GCLOUD_PROJECT || 'default-project')
-    .digest('base64')
-    .substr(0, 32);
+    .digest()
+    .slice(0, 32); // AES-256 requires exactly 32 bytes
 
 // Helper function to decrypt password
 function decryptPassword(encryptedPassword) {
@@ -394,9 +397,8 @@ exports.encryptSmtpPassword = functions.https.onCall(async (data, context) => {
     
     const userEmail = context.auth.token.email;
     
-    // Check if user is admin (hardcoded for simplicity)
-    const adminEmail = 'kartikmehta15@gmail.com';
-    if (userEmail !== adminEmail) {
+    // Check if user is admin
+    if (userEmail !== ADMIN_EMAIL) {
         throw new functions.https.HttpsError('permission-denied', 'Admin access required');
     }
     
@@ -433,8 +435,7 @@ exports.testAdminSmtpConfig = functions.https.onCall(async (data, context) => {
     const userEmail = context.auth.token.email;
     
     // Check if user is admin
-    const adminEmail = 'kartikmehta15@gmail.com';
-    if (userEmail !== adminEmail) {
+    if (userEmail !== ADMIN_EMAIL) {
         throw new functions.https.HttpsError('permission-denied', 'Admin access required');
     }
     
