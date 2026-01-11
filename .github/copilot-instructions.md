@@ -79,7 +79,7 @@ This is a water intake tracking web application that helps users monitor their d
 ### Firebase Integration
 
 1. **Configuration**:
-   - Firebase config is stored in `auth.js` (lines 4-11)
+   - Firebase config is stored in `auth.js` (lines 4-12)
    - **Note**: This repository currently has Firebase API keys committed for demo purposes
    - For production forks: Replace with your own Firebase project credentials
    - Firebase API keys are safe to expose client-side as they're restricted by domain and security rules
@@ -263,7 +263,7 @@ When adding features or making changes:
 
 1. User signs up/signs in via Firebase Authentication
 2. Firebase SDK creates and manages authentication token
-3. Token stored automatically by Firebase SDK (using IndexedDB with localStorage fallback)
+3. Token stored automatically by Firebase SDK (primarily using IndexedDB for persistence)
 4. All Firestore operations authenticate using this managed token
 5. Token refreshed automatically by Firebase SDK
 
