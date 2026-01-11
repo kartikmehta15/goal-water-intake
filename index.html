@@ -230,6 +230,84 @@
             <section class="tab-content" id="tab-settings">
                 <h2>⚙️ Settings</h2>
                 
+                <!-- Admin-Only EmailJS Configuration -->
+                <div class="admin-section" id="admin-section" style="display: none;">
+                    <div class="admin-badge">👨‍💼 Administrator Controls</div>
+                    
+                    <div class="settings-card admin-card">
+                        <h3>⚙️ EmailJS Configuration (Admin Only)</h3>
+                        <p class="admin-description">Configure EmailJS once for all users. Regular users will only need to enable notifications and set times.</p>
+                        
+                        <div class="emailjs-config">
+                            <div class="config-field">
+                                <label for="admin-emailjs-service-id">Service ID:</label>
+                                <input type="text" id="admin-emailjs-service-id" class="config-input" placeholder="service_xxxxxxx" />
+                            </div>
+                            
+                            <div class="config-field">
+                                <label for="admin-emailjs-template-id">Template ID:</label>
+                                <input type="text" id="admin-emailjs-template-id" class="config-input" placeholder="template_xxxxxxx" />
+                            </div>
+                            
+                            <div class="config-field">
+                                <label for="admin-emailjs-public-key">Public Key:</label>
+                                <input type="text" id="admin-emailjs-public-key" class="config-input" placeholder="public_xxxxxxx" />
+                            </div>
+                            
+                            <div class="config-field">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="admin-emailjs-enabled" />
+                                    <span>Enable email system for all users</span>
+                                </label>
+                            </div>
+                            
+                            <button id="save-admin-config-btn" class="btn-primary">💾 Save Admin Configuration</button>
+                            <div class="admin-config-message" id="admin-config-message"></div>
+                        </div>
+                        
+                        <div class="admin-status" id="admin-status">
+                            <h4>Current Configuration Status:</h4>
+                            <div class="status-info" id="status-info">
+                                <p>Status: <span id="config-status">Not configured</span></p>
+                                <p>Configured by: <span id="config-admin">-</span></p>
+                                <p>Last updated: <span id="config-updated">-</span></p>
+                            </div>
+                        </div>
+                        
+                        <!-- EmailJS Setup Guide -->
+                        <details class="admin-guide">
+                            <summary><strong>📖 How to Set Up EmailJS (5 minutes)</strong></summary>
+                            <ol class="setup-steps">
+                                <li>Go to <a href="https://www.emailjs.com" target="_blank">EmailJS.com</a> and sign up (free)</li>
+                                <li>Add Gmail service and authorize</li>
+                                <li>Create email template (see below)</li>
+                                <li>Copy Service ID, Template ID, and Public Key</li>
+                                <li>Paste them above and click Save</li>
+                                <li>Enable the system for all users</li>
+                            </ol>
+                            
+                            <div class="template-example">
+                                <p><strong>Email Template:</strong></p>
+                                <pre>Subject: {{reminder_time}} - Time to Hydrate! 💧
+
+Body:
+Hi {{to_name}}! 👋
+
+Reminder to drink water!
+
+Today's Progress:
+🚰 Current: {{current_amount}} ml
+🎯 Goal: {{goal_amount}} ml
+📊 Progress: {{percentage}}%
+
+Stay hydrated! 💪
+
+<a href="{{website_url}}">Update your intake</a></pre>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+                
                 <!-- Power User Unlock Section -->
                 <div id="power-user-lock" class="power-user-unlock" style="display: none;">
                     <h3>🔒 Email Notifications (Power Users Only)</h3>
@@ -245,6 +323,200 @@
                 <div id="power-user-unlocked" class="power-user-unlocked" style="display: none;">
                     <h3>✅ Power User Unlocked</h3>
                     <p>Email notifications are enabled for your account</p>
+                </div>
+                
+                <!-- Regular User Email Settings (Simplified) -->
+                <div class="settings-card" id="user-email-settings">
+                    <h3>📧 Email Notifications</h3>
+                    
+                    <!-- Show system status -->
+                    <div class="email-system-status" id="email-system-status">
+                        <p class="system-status-message">Loading email system status...</p>
+                    </div>
+                    
+                    <div id="user-notification-settings" style="display: none;">
+                        <p class="settings-description">Receive email reminders throughout the day</p>
+                        
+                        <div class="setting-item">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="email-notifications-enabled" />
+                                <span>Enable email reminders for me</span>
+                            </label>
+                        </div>
+                        
+                        <div id="notification-settings" class="notification-settings" style="display: none;">
+                            <div class="setting-item">
+                                <label class="setting-label">Reminder Times (Up to 5 Custom Reminders)</label>
+                                
+                                <!-- Reminder Slot 1 -->
+                                <div class="reminder-slot" id="reminder-slot-1">
+                                    <div class="reminder-header">
+                                        <h4>Reminder 1</h4>
+                                        <div class="reminder-enable">
+                                            <input type="checkbox" id="reminder-1-enabled" checked>
+                                            <label for="reminder-1-enabled">Enabled</label>
+                                        </div>
+                                    </div>
+                                    <div class="reminder-time-options">
+                                        <label>Time:</label>
+                                        <select id="reminder-1-preset" class="time-preset-select">
+                                            <option value="">-- Select Preset --</option>
+                                            <option value="07:00">7:00 AM</option>
+                                            <option value="09:00" selected>9:00 AM</option>
+                                            <option value="11:00">11:00 AM</option>
+                                            <option value="12:00">12:00 PM</option>
+                                            <option value="14:00">2:00 PM</option>
+                                            <option value="15:00">3:00 PM</option>
+                                            <option value="17:00">5:00 PM</option>
+                                            <option value="19:00">7:00 PM</option>
+                                            <option value="21:00">9:00 PM</option>
+                                            <option value="custom">Custom Time</option>
+                                        </select>
+                                        <span class="time-divider">or</span>
+                                        <input type="time" id="reminder-1-custom" class="custom-time-input" disabled />
+                                    </div>
+                                </div>
+
+                                <!-- Reminder Slots 2-5 (similar structure) -->
+                                <div class="reminder-slot" id="reminder-slot-2">
+                                    <div class="reminder-header">
+                                        <h4>Reminder 2</h4>
+                                        <div class="reminder-enable">
+                                            <input type="checkbox" id="reminder-2-enabled" checked>
+                                            <label for="reminder-2-enabled">Enabled</label>
+                                        </div>
+                                    </div>
+                                    <div class="reminder-time-options">
+                                        <label>Time:</label>
+                                        <select id="reminder-2-preset" class="time-preset-select">
+                                            <option value="">-- Select Preset --</option>
+                                            <option value="07:00">7:00 AM</option>
+                                            <option value="09:00">9:00 AM</option>
+                                            <option value="11:00">11:00 AM</option>
+                                            <option value="12:00">12:00 PM</option>
+                                            <option value="14:00">2:00 PM</option>
+                                            <option value="15:00" selected>3:00 PM</option>
+                                            <option value="17:00">5:00 PM</option>
+                                            <option value="19:00">7:00 PM</option>
+                                            <option value="21:00">9:00 PM</option>
+                                            <option value="custom">Custom Time</option>
+                                        </select>
+                                        <span class="time-divider">or</span>
+                                        <input type="time" id="reminder-2-custom" class="custom-time-input" disabled />
+                                    </div>
+                                </div>
+
+                                <div class="reminder-slot" id="reminder-slot-3">
+                                    <div class="reminder-header">
+                                        <h4>Reminder 3</h4>
+                                        <div class="reminder-enable">
+                                            <input type="checkbox" id="reminder-3-enabled" checked>
+                                            <label for="reminder-3-enabled">Enabled</label>
+                                        </div>
+                                    </div>
+                                    <div class="reminder-time-options">
+                                        <label>Time:</label>
+                                        <select id="reminder-3-preset" class="time-preset-select">
+                                            <option value="">-- Select Preset --</option>
+                                            <option value="07:00">7:00 AM</option>
+                                            <option value="09:00">9:00 AM</option>
+                                            <option value="11:00">11:00 AM</option>
+                                            <option value="12:00">12:00 PM</option>
+                                            <option value="14:00">2:00 PM</option>
+                                            <option value="15:00">3:00 PM</option>
+                                            <option value="17:00">5:00 PM</option>
+                                            <option value="19:00" selected>7:00 PM</option>
+                                            <option value="21:00">9:00 PM</option>
+                                            <option value="custom">Custom Time</option>
+                                        </select>
+                                        <span class="time-divider">or</span>
+                                        <input type="time" id="reminder-3-custom" class="custom-time-input" disabled />
+                                    </div>
+                                </div>
+
+                                <div class="reminder-slot disabled" id="reminder-slot-4">
+                                    <div class="reminder-header">
+                                        <h4>Reminder 4</h4>
+                                        <div class="reminder-enable">
+                                            <input type="checkbox" id="reminder-4-enabled">
+                                            <label for="reminder-4-enabled">Enabled</label>
+                                        </div>
+                                    </div>
+                                    <div class="reminder-time-options">
+                                        <label>Time:</label>
+                                        <select id="reminder-4-preset" class="time-preset-select" disabled>
+                                            <option value="">-- Select Preset --</option>
+                                            <option value="07:00">7:00 AM</option>
+                                            <option value="09:00">9:00 AM</option>
+                                            <option value="11:00">11:00 AM</option>
+                                            <option value="12:00" selected>12:00 PM</option>
+                                            <option value="14:00">2:00 PM</option>
+                                            <option value="15:00">3:00 PM</option>
+                                            <option value="17:00">5:00 PM</option>
+                                            <option value="19:00">7:00 PM</option>
+                                            <option value="21:00">9:00 PM</option>
+                                            <option value="custom">Custom Time</option>
+                                        </select>
+                                        <span class="time-divider">or</span>
+                                        <input type="time" id="reminder-4-custom" class="custom-time-input" disabled />
+                                    </div>
+                                </div>
+
+                                <div class="reminder-slot disabled" id="reminder-slot-5">
+                                    <div class="reminder-header">
+                                        <h4>Reminder 5</h4>
+                                        <div class="reminder-enable">
+                                            <input type="checkbox" id="reminder-5-enabled">
+                                            <label for="reminder-5-enabled">Enabled</label>
+                                        </div>
+                                    </div>
+                                    <div class="reminder-time-options">
+                                        <label>Time:</label>
+                                        <select id="reminder-5-preset" class="time-preset-select" disabled>
+                                            <option value="">-- Select Preset --</option>
+                                            <option value="07:00">7:00 AM</option>
+                                            <option value="09:00">9:00 AM</option>
+                                            <option value="11:00">11:00 AM</option>
+                                            <option value="12:00">12:00 PM</option>
+                                            <option value="14:00">2:00 PM</option>
+                                            <option value="15:00">3:00 PM</option>
+                                            <option value="17:00">5:00 PM</option>
+                                            <option value="19:00">7:00 PM</option>
+                                            <option value="21:00" selected>9:00 PM</option>
+                                            <option value="custom">Custom Time</option>
+                                        </select>
+                                        <span class="time-divider">or</span>
+                                        <input type="time" id="reminder-5-custom" class="custom-time-input" disabled />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="setting-item">
+                                <label for="user-timezone" class="setting-label">Your Timezone</label>
+                                <select id="user-timezone" class="timezone-select">
+                                    <!-- Will be populated by JavaScript -->
+                                </select>
+                            </div>
+
+                            <button id="save-settings-btn" class="btn-primary">💾 Save Settings</button>
+                        </div>
+                        
+                        <!-- Test Email Section -->
+                        <div class="settings-group" style="margin-top: 30px;">
+                            <h4>🧪 Test Email Delivery</h4>
+                            <p class="settings-description">Send a test reminder email to verify your setup is working correctly</p>
+                            
+                            <div class="test-email-info">
+                                <p>Test email will be sent to: <strong id="test-email-address"></strong></p>
+                                <p class="test-note">The email will show your current progress and include a link to the website.</p>
+                            </div>
+                            
+                            <button id="send-test-email-btn" class="btn-secondary">
+                                📨 Send Test Email Now
+                            </button>
+                            <div class="test-message" id="test-message"></div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="settings-card" id="email-settings-card" style="display: none;">
