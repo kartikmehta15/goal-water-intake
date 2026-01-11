@@ -17,7 +17,6 @@ const POWER_USER_CODE = 'WATER-HYDRO-2026-PWR9';
 const REMINDER_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const REMINDER_WINDOW_MS = 5 * 60 * 1000; // 5 minute window to catch reminders
 const TEST_MESSAGE_TIMEOUT_MS = 8000; // 8 seconds
-const CONFIG_MESSAGE_TIMEOUT_MS = 5000; // 5 seconds
 
 class WaterIntakeTracker {
     constructor() {
@@ -282,7 +281,7 @@ class WaterIntakeTracker {
             return true;
         }
         
-        // Use Firestore config if available, otherwise fall back to localStorage for backward compatibility
+        // Use Firestore config (loaded from /config/emailjs document)
         const config = this.emailConfig || this.getEmailJSConfig();
         if (config && config.publicKey) {
             try {
