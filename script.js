@@ -1484,10 +1484,12 @@ class WaterIntakeTracker {
                 this.showPowerUserStatus(false);
             }
             
-            // Set test email address
-            const testEmailEl = document.getElementById('test-email-address');
-            if (testEmailEl) {
-                testEmailEl.textContent = this.userEmail;
+            // Set admin test email address if admin
+            if (this.isAdmin) {
+                const adminTestEmailEl = document.getElementById('admin-test-email-address');
+                if (adminTestEmailEl) {
+                    adminTestEmailEl.textContent = this.userEmail;
+                }
             }
         } catch (error) {
             console.error('Error loading user settings:', error);
@@ -1547,11 +1549,17 @@ class WaterIntakeTracker {
         }
     }
 
-    // Send test email
+    // Send test email - Admin only feature
     async sendTestEmail() {
         const btn = document.getElementById('send-test-email-btn');
         const messageEl = document.getElementById('test-message');
         const originalText = btn.innerHTML;
+        
+        // Check if user is admin (admin-only feature)
+        if (!this.isAdmin) {
+            this.showTestMessage('❌ Test email is available for administrators only', 'error');
+            return;
+        }
         
         // Show loading state
         btn.disabled = true;
@@ -1561,37 +1569,43 @@ class WaterIntakeTracker {
         }
         
         try {
-            // Check if EmailJS is configured (Firestore or localStorage)
-            const config = this.emailConfig || this.getEmailJSConfig();
-            if (!config || !config.serviceId || !config.templateId || !config.publicKey) {
-                this.showTestMessage('❌ Please configure EmailJS settings first', 'error');
+            // Check if Firebase Functions is available
+            if (!firebase.functions) {
+                this.showTestMessage('❌ Firebase Functions not available', 'error');
                 return;
             }
             
-            // Check if email system is enabled (for Firestore config)
-            if (this.emailConfig && !this.emailConfig.enabled) {
-                this.showTestMessage('❌ Email system is currently disabled by administrator', 'error');
-                return;
-            }
+            // Call Firebase Cloud Function to send test email
+            const sendTestEmailFunction = firebase.functions().httpsCallable('sendTestEmail');
+            const result = await sendTestEmailFunction();
             
-            // Send test email
-            const success = await this.sendEmailReminder('TEST');
-            
-            if (success) {
+            if (result.data && result.data.message) {
                 this.showTestMessage(
-                    '✅ Test email sent successfully! Check your inbox (and spam folder).',
+                    `✅ ${result.data.message} Check your inbox (and spam folder).`,
                     'success'
                 );
             } else {
                 this.showTestMessage(
-                    '❌ Failed to send test email. Please check your EmailJS configuration.',
-                    'error'
+                    '✅ Test email sent successfully! Check your inbox (and spam folder).',
+                    'success'
                 );
             }
             
         } catch (error) {
             console.error('Test email error:', error);
-            this.showTestMessage(`❌ Error: ${error.message}`, 'error');
+            let errorMessage = '❌ Failed to send test email. ';
+            
+            if (error.code === 'unauthenticated') {
+                errorMessage += 'Please sign in first.';
+            } else if (error.code === 'permission-denied') {
+                errorMessage += 'Power user verification required.';
+            } else if (error.message) {
+                errorMessage += error.message;
+            } else {
+                errorMessage += 'Please check Firebase Functions configuration.';
+            }
+            
+            this.showTestMessage(errorMessage, 'error');
             
         } finally {
             // Restore button state
