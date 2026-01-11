@@ -28,6 +28,18 @@ A beautiful, interactive web application to track your daily water consumption a
 - **🌐 Offline Support**: Works offline with automatic sync when back online
 - **🔒 Secure**: Data is protected with Firebase security rules
 
+### Email Notifications (NEW!)
+- **📧 Smart Email Reminders**: Receive email reminders throughout the day to stay hydrated
+- **👨‍💼 Admin Configuration**: One-time SMTP setup by admin (supports Gmail, Sendinblue, Outlook)
+- **🔐 Encrypted Storage**: SMTP passwords encrypted with AES-256-CBC
+- **⏰ Flexible Scheduling**: Configure up to 5 custom reminder times (preset or custom)
+- **🧪 Test Email**: Verify email setup with test email functionality
+- **🌍 Timezone-Aware**: Reminders sent based on your local timezone
+- **💸 Zero Cost**: Free tier - Gmail allows 500 emails/day
+- **📍 No Credit Card**: Uses free SMTP providers, no payment required
+
+For detailed setup instructions, see [GMAIL_SMTP_SETUP.md](GMAIL_SMTP_SETUP.md)
+
 ## Firebase Setup Instructions
 
 ### Prerequisites
@@ -102,7 +114,25 @@ const firebaseConfig = {
 };
 ```
 
-### Step 7: Deploy the Application
+### Step 7: Deploy Cloud Functions (Optional - for Email Notifications)
+
+If you want to enable email notifications:
+
+1. Install dependencies:
+   ```bash
+   cd functions
+   npm install
+   cd ..
+   ```
+
+2. Deploy functions:
+   ```bash
+   firebase deploy --only functions
+   ```
+
+3. Configure email settings via admin panel (see [GMAIL_SMTP_SETUP.md](GMAIL_SMTP_SETUP.md))
+
+### Step 8: Deploy the Application
 
 You have several options:
 
@@ -110,7 +140,7 @@ You have several options:
 1. Install Firebase CLI: `npm install -g firebase-tools`
 2. Login to Firebase: `firebase login`
 3. Initialize Firebase: `firebase init`
-   - Select "Hosting"
+   - Select "Hosting" (and "Functions" if you want email notifications)
    - Choose your project
    - Use public directory: `.` (current directory)
    - Configure as single-page app: No
@@ -123,11 +153,13 @@ You have several options:
 3. Go to repository Settings > Pages
 4. Select your branch and save
 
+**Note:** Email notifications require Cloud Functions, which won't work with GitHub Pages alone. Use Firebase Hosting if you want email notifications.
+
 #### Option C: Local Development
 1. Use a local web server (e.g., `python -m http.server` or VS Code Live Server)
 2. Open in your browser
 
-### Step 8: Test Your Application
+### Step 9: Test Your Application
 
 1. Open the deployed or local URL
 2. Try signing up with email/password
