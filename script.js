@@ -1368,30 +1368,48 @@ class WaterIntakeTracker {
                 this.showPowerUserStatus(isPowerUser);
                 
                 if (isPowerUser) {
-                    // Load notification settings
-                    document.getElementById('email-notifications-enabled').checked = settings.notificationsEnabled || false;
-                    document.getElementById('notification-settings').style.display = settings.notificationsEnabled ? 'block' : 'none';
-                    
-                    // Load 5 reminder slots
-                    for (let i = 1; i <= 5; i++) {
-                        const reminderKey = `reminder${i}`;
-                        const reminder = settings[reminderKey];
+                    // Load reminder preferences from backend API
+                    try {
+                        const reminderData = await callBackendAPI('/api/email/reminders', 'GET');
                         
-                        if (reminder) {
-                            document.getElementById(`reminder-${i}-enabled`).checked = reminder.enabled || false;
-                            
-                            if (reminder.preset && reminder.preset !== 'custom') {
-                                document.getElementById(`reminder-${i}-preset`).value = reminder.preset;
-                                document.getElementById(`reminder-${i}-custom`).disabled = true;
-                            } else if (reminder.custom) {
-                                document.getElementById(`reminder-${i}-preset`).value = 'custom';
-                                document.getElementById(`reminder-${i}-custom`).value = reminder.custom;
-                                document.getElementById(`reminder-${i}-custom`).disabled = false;
-                            }
-                            
-                            // Update slot appearance
+                        // Set notifications enabled checkbox
+                        document.getElementById('email-notifications-enabled').checked = reminderData.notificationsEnabled || false;
+                        document.getElementById('notification-settings').style.display = reminderData.notificationsEnabled ? 'block' : 'none';
+                        
+                        // Clear all reminder slots first
+                        for (let i = 1; i <= 5; i++) {
+                            document.getElementById(`reminder-${i}-enabled`).checked = false;
+                            document.getElementById(`reminder-${i}-preset`).value = '';
+                            document.getElementById(`reminder-${i}-custom`).value = '';
+                            document.getElementById(`reminder-${i}-custom`).disabled = true;
                             this.updateReminderSlot(i);
                         }
+                        
+                        // Load reminders from backend (new array format)
+                        if (reminderData.reminders && Array.isArray(reminderData.reminders)) {
+                            for (let i = 0; i < Math.min(reminderData.reminders.length, 5); i++) {
+                                const reminder = reminderData.reminders[i];
+                                const slotNum = i + 1;
+                                
+                                document.getElementById(`reminder-${slotNum}-enabled`).checked = true;
+                                
+                                if (reminder.type === 'custom') {
+                                    document.getElementById(`reminder-${slotNum}-preset`).value = 'custom';
+                                    document.getElementById(`reminder-${slotNum}-custom`).value = reminder.time;
+                                    document.getElementById(`reminder-${slotNum}-custom`).disabled = false;
+                                } else {
+                                    document.getElementById(`reminder-${slotNum}-preset`).value = reminder.time;
+                                    document.getElementById(`reminder-${slotNum}-custom`).disabled = true;
+                                }
+                                
+                                this.updateReminderSlot(slotNum);
+                            }
+                        }
+                    } catch (apiError) {
+                        console.error('Error loading reminders from backend:', apiError);
+                        // Fall back to local Firestore data if backend fails
+                        document.getElementById('email-notifications-enabled').checked = settings.notificationsEnabled || false;
+                        document.getElementById('notification-settings').style.display = settings.notificationsEnabled ? 'block' : 'none';
                     }
                     
                     if (settings.timezone) {
@@ -1421,27 +1439,51 @@ class WaterIntakeTracker {
 
     async saveUserSettings() {
         try {
+            const notificationsEnabled = document.getElementById('email-notifications-enabled').checked;
+            
+            // Build reminders array from the 5 slots
+            const reminders = [];
+            for (let i = 1; i <= 5; i++) {
+                const enabled = document.getElementById(`reminder-${i}-enabled`).checked;
+                
+                if (enabled) {
+                    const preset = document.getElementById(`reminder-${i}-preset`).value;
+                    const custom = document.getElementById(`reminder-${i}-custom`).value;
+                    
+                    let reminderTime = null;
+                    let reminderType = 'preset';
+                    
+                    if (preset === 'custom' && custom) {
+                        reminderTime = custom;
+                        reminderType = 'custom';
+                    } else if (preset && preset !== 'custom') {
+                        reminderTime = preset;
+                        reminderType = 'preset';
+                    }
+                    
+                    if (reminderTime) {
+                        reminders.push({
+                            time: reminderTime,
+                            type: reminderType
+                        });
+                    }
+                }
+            }
+            
+            // Call backend API to save reminders
+            await callBackendAPI('/api/email/reminders', 'POST', {
+                notificationsEnabled: notificationsEnabled,
+                reminders: reminders
+            });
+            
+            // Also save timezone and other settings to Firestore directly
             const settings = {
-                notificationsEnabled: document.getElementById('email-notifications-enabled').checked,
                 timezone: document.getElementById('user-timezone').value,
                 email: this.userEmail,
                 userId: this.userId,
                 updatedAt: new Date()
             };
-
-            // Save all 5 reminder slots
-            for (let i = 1; i <= 5; i++) {
-                const enabled = document.getElementById(`reminder-${i}-enabled`).checked;
-                const preset = document.getElementById(`reminder-${i}-preset`).value;
-                const custom = document.getElementById(`reminder-${i}-custom`).value;
-                
-                settings[`reminder${i}`] = {
-                    enabled: enabled,
-                    preset: preset === 'custom' ? 'custom' : preset,
-                    custom: preset === 'custom' ? custom : ''
-                };
-            }
-
+            
             await db.collection('users').doc(this.userId).set(settings, { merge: true });
             
             this.showSuccess('Notification settings saved successfully!');
