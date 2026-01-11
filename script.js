@@ -17,7 +17,6 @@ const POWER_USER_CODE = 'WATER-HYDRO-2026-PWR9';
 const REMINDER_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 const REMINDER_WINDOW_MS = 5 * 60 * 1000; // 5 minute window to catch reminders
 const TEST_MESSAGE_TIMEOUT_MS = 8000; // 8 seconds
-const CONFIG_MESSAGE_TIMEOUT_MS = 5000; // 5 seconds
 
 class WaterIntakeTracker {
     constructor() {
@@ -282,7 +281,7 @@ class WaterIntakeTracker {
             return true;
         }
         
-        // Use Firestore config if available, otherwise fall back to localStorage for backward compatibility
+        // Use Firestore config (loaded from /config/emailjs document)
         const config = this.emailConfig || this.getEmailJSConfig();
         if (config && config.publicKey) {
             try {
@@ -304,15 +303,8 @@ class WaterIntakeTracker {
     }
     
     getEmailJSConfig() {
-        // Backward compatibility: check localStorage for old configs
-        const configStr = localStorage.getItem('emailjs_config');
-        if (configStr) {
-            try {
-                return JSON.parse(configStr);
-            } catch (error) {
-                console.error('Failed to parse EmailJS config:', error);
-            }
-        }
+        // EmailJS config is now centrally managed via Firestore
+        // Return null to force usage of this.emailConfig from Firestore
         return null;
     }
     
@@ -1438,17 +1430,6 @@ class WaterIntakeTracker {
                 }
             });
         }
-        
-        // Save EmailJS configuration button (backward compatibility for old UI)
-        const saveConfigBtn = document.getElementById('save-emailjs-config');
-        if (saveConfigBtn) {
-            saveConfigBtn.addEventListener('click', () => {
-                this.saveEmailJSConfig();
-            });
-        }
-        
-        // Load EmailJS configuration (backward compatibility)
-        this.loadEmailJSConfig();
     }
 
     async loadUserSettings() {
@@ -1677,61 +1658,6 @@ class WaterIntakeTracker {
             codeInput.value = '';
         }
     }
-    
-    saveEmailJSConfig() {
-        const serviceId = document.getElementById('emailjs-service-id').value.trim();
-        const templateId = document.getElementById('emailjs-template-id').value.trim();
-        const publicKey = document.getElementById('emailjs-public-key').value.trim();
-        
-        if (!serviceId || !templateId || !publicKey) {
-            this.showConfigMessage('Please fill in all configuration fields', 'error');
-            return;
-        }
-        
-        const config = {
-            serviceId: serviceId,
-            templateId: templateId,
-            publicKey: publicKey
-        };
-        
-        try {
-            localStorage.setItem('emailjs_config', JSON.stringify(config));
-            
-            // Initialize EmailJS with new config
-            this.initializeEmailJS();
-            
-            this.showConfigMessage('✅ EmailJS configuration saved successfully!', 'success');
-        } catch (error) {
-            console.error('Failed to save EmailJS config:', error);
-            this.showConfigMessage('❌ Failed to save configuration', 'error');
-        }
-    }
-    
-    loadEmailJSConfig() {
-        const config = this.getEmailJSConfig();
-        if (config) {
-            if (config.serviceId) {
-                document.getElementById('emailjs-service-id').value = config.serviceId;
-            }
-            if (config.templateId) {
-                document.getElementById('emailjs-template-id').value = config.templateId;
-            }
-            if (config.publicKey) {
-                document.getElementById('emailjs-public-key').value = config.publicKey;
-            }
-        }
-    }
-    
-    showConfigMessage(message, type) {
-        const messageEl = document.getElementById('config-message');
-        messageEl.textContent = message;
-        messageEl.className = `config-message ${type}`;
-        
-        // Auto-hide after configured timeout
-        setTimeout(() => {
-            messageEl.className = 'config-message';
-        }, CONFIG_MESSAGE_TIMEOUT_MS);
-    }
 
     showUnlockMessage(message, type) {
         const messageEl = document.getElementById('unlock-message');
@@ -1743,16 +1669,13 @@ class WaterIntakeTracker {
     showPowerUserStatus(isPowerUser) {
         const lockSection = document.getElementById('power-user-lock');
         const unlockedSection = document.getElementById('power-user-unlocked');
-        const emailSettingsCard = document.getElementById('email-settings-card');
 
         if (isPowerUser) {
             lockSection.style.display = 'none';
             unlockedSection.style.display = 'block';
-            emailSettingsCard.style.display = 'block';
         } else {
             lockSection.style.display = 'block';
             unlockedSection.style.display = 'none';
-            emailSettingsCard.style.display = 'none';
         }
     }
 
