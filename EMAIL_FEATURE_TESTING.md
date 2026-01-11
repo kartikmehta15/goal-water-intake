@@ -7,7 +7,9 @@ This guide helps you test all email-related features that were implemented/fixed
 Before testing, ensure:
 1. Firebase Functions deployed with Gmail SMTP configured
 2. EmailJS configured (optional, for client-side reminders)
-3. Admin account set up
+3. Admin account set up (configured via Firebase Functions config or default in script.js)
+   - To set custom admin email: `firebase functions:config:set admin.email="your-admin@example.com"`
+   - Default admin email is set in `script.js` ADMIN_EMAIL constant and `functions/index.js`
 
 ---
 
@@ -22,7 +24,7 @@ Before testing, ensure:
 
 1. **Login as Admin**
    - Navigate to `auth.html`
-   - Sign in with admin email: `kartikmehta15@gmail.com`
+   - Sign in with the admin email configured in Firebase
 
 2. **Verify Admin UI Appears**
    - Go to Settings tab
