@@ -991,6 +991,7 @@ input[type="number"]:focus {
 }
 
 /* Settings Section */
+/* Note: Settings cards are now wrapped in collapsible-section which provides borders/shadows */
 .settings-card {
     background: var(--card-bg);
     border-radius: 0;
@@ -1097,7 +1098,7 @@ input[type="number"]:focus {
 
 .section-content {
     overflow: hidden;
-    max-height: 3000px;
+    max-height: 3000px; /* Large enough for typical settings content */
     transition: max-height 0.4s ease, padding 0.4s ease, opacity 0.3s ease;
     padding: 24px;
     opacity: 1;
@@ -1425,7 +1426,7 @@ input:checked + .slider:before {
 }
 
 .reminder-slot:hover {
-    border-color: #4A90E2;
+    border-color: var(--primary-color);
     box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);
 }
 
