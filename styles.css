@@ -1475,6 +1475,14 @@ input:checked + .slider:before {
         padding: 20px;
     }
     
+    .section-header {
+        padding: 12px 15px;
+    }
+    
+    .section-header h3 {
+        font-size: 1.1rem;
+    }
+    
     .unlock-form {
         flex-direction: column;
     }
