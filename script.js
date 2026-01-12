@@ -5,7 +5,7 @@
 // For production: Your backend URL (e.g., https://your-backend.render.com)
 const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:3000'
-    : 'https://your-backend-url.com'; // UPDATE THIS with your deployed backend URL
+    : 'https://water-tracker-backend-7lhu.onrender.com'; // UPDATE THIS with your deployed backend URL
 
 // Validate BACKEND_URL is configured
 if (BACKEND_URL.includes('your-backend-url.com')) {
