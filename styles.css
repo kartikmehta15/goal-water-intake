@@ -1019,41 +1019,40 @@ input[type="number"]:focus {
     transition: all 0.2s ease;
 }
 
-/* Status Messages */
+/* Status Messages - Base and Variants */
+.status-success,
+.status-warning,
+.status-info,
+.status-error {
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 12px;
+    border-left-width: 4px;
+    border-left-style: solid;
+}
+
 .status-success {
     background: #d4edda;
     color: #155724;
-    padding: 12px;
-    border-radius: 6px;
-    border-left: 4px solid #28a745;
-    margin-top: 12px;
+    border-left-color: #28a745;
 }
 
 .status-warning {
     background: #fff3cd;
     color: #856404;
-    padding: 12px;
-    border-radius: 6px;
-    border-left: 4px solid #ffc107;
-    margin-top: 12px;
+    border-left-color: #ffc107;
 }
 
 .status-info {
     background: #d1ecf1;
     color: #0c5460;
-    padding: 12px;
-    border-radius: 6px;
-    border-left: 4px solid #17a2b8;
-    margin-top: 12px;
+    border-left-color: #17a2b8;
 }
 
 .status-error {
     background: #f8d7da;
     color: #721c24;
-    padding: 12px;
-    border-radius: 6px;
-    border-left: 4px solid #dc3545;
-    margin-top: 12px;
+    border-left-color: #dc3545;
 }
 
 /* Collapsible Sections - Enhanced Design */
@@ -1722,16 +1721,16 @@ input:checked + .slider:before {
 }
 
 /* Admin Section Styles - Enhanced */
-.admin-section {
-    border: 2px solid #ffc107 !important;
+.collapsible-section.admin-section {
+    border: 2px solid #ffc107;
 }
 
-.admin-section .section-header {
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+.collapsible-section.admin-section .section-header {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
 
-.admin-section .section-header:hover {
-    background: linear-gradient(135deg, #d97706 0%, #b45309 100%) !important;
+.collapsible-section.admin-section .section-header:hover {
+    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 }
 
 .admin-badge {
