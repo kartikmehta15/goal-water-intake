@@ -229,124 +229,6 @@
             <section class="tab-content" id="tab-settings">
                 <h2>⚙️ Settings</h2>
                 
-                <!-- Admin-Only SMTP Configuration -->
-                <div class="admin-section" id="admin-section" style="display: none;">
-                    <div class="admin-badge">👨‍💼 Administrator Controls</div>
-                    
-                    <div class="settings-card admin-card">
-                        <h3>📧 Email SMTP Configuration (Admin Only)</h3>
-                        <p class="admin-description">Configure SMTP settings once for all users. Uses Gmail SMTP or any other SMTP provider. Regular users will only need to enable notifications and set reminder times.</p>
-                        
-                        <div class="smtp-config">
-                            <div class="config-field">
-                                <label for="admin-smtp-host">SMTP Host:</label>
-                                <input type="text" id="admin-smtp-host" class="config-input" placeholder="smtp.gmail.com" />
-                                <small class="field-hint">For Gmail: smtp.gmail.com</small>
-                            </div>
-                            
-                            <div class="config-field">
-                                <label for="admin-smtp-port">SMTP Port:</label>
-                                <input type="number" id="admin-smtp-port" class="config-input" placeholder="587" value="587" />
-                                <small class="field-hint">Common ports: 587 (TLS), 465 (SSL), 25</small>
-                            </div>
-                            
-                            <div class="config-field">
-                                <label for="admin-sender-email">Sender Email Address:</label>
-                                <input type="email" id="admin-sender-email" class="config-input" placeholder="your-email@gmail.com" />
-                                <small class="field-hint">The email address that will send notifications</small>
-                            </div>
-                            
-                            <div class="config-field">
-                                <label for="admin-sender-password">Email Password / App Password:</label>
-                                <input type="password" id="admin-sender-password" class="config-input" placeholder="••••••••••••••••" />
-                                <small class="field-hint">⚠️ For Gmail, use an <a href="https://myaccount.google.com/apppasswords" target="_blank">App Password</a>, not your regular password</small>
-                            </div>
-                            
-                            <div class="config-field">
-                                <label class="checkbox-label">
-                                    <input type="checkbox" id="admin-smtp-enabled" />
-                                    <span>Enable email system for all users</span>
-                                </label>
-                            </div>
-                            
-                            <div class="admin-actions">
-                                <button id="save-admin-smtp-btn" class="btn-primary">💾 Save Configuration</button>
-                                <button id="test-admin-smtp-btn" class="btn-secondary">🧪 Save & Test Email</button>
-                            </div>
-                            <div class="admin-config-message" id="admin-config-message"></div>
-                        </div>
-                        
-                        <div class="admin-status" id="admin-status">
-                            <h4>Current Configuration Status:</h4>
-                            <div class="status-info" id="status-info">
-                                <p>Status: <span id="config-status">Not configured</span></p>
-                                <p>SMTP Host: <span id="config-smtp-host">-</span></p>
-                                <p>Sender Email: <span id="config-sender-email">-</span></p>
-                                <p>Configured by: <span id="config-admin">-</span></p>
-                                <p>Last updated: <span id="config-updated">-</span></p>
-                            </div>
-                        </div>
-                        
-                        <!-- Gmail SMTP Setup Guide -->
-                        <details class="admin-guide">
-                            <summary><strong>📖 Gmail SMTP Setup Guide (5 minutes)</strong></summary>
-                            <div class="guide-content">
-                                <h4>Step 1: Enable 2-Step Verification</h4>
-                                <ol class="setup-steps">
-                                    <li>Visit <a href="https://myaccount.google.com/security" target="_blank">Google Account Security</a></li>
-                                    <li>Find "2-Step Verification" and enable it</li>
-                                    <li>Complete the verification process</li>
-                                </ol>
-                                
-                                <h4>Step 2: Generate App Password</h4>
-                                <ol class="setup-steps">
-                                    <li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank">App Passwords</a></li>
-                                    <li>Select app: <strong>Mail</strong></li>
-                                    <li>Select device: <strong>Other</strong> (name it "Water Tracker")</li>
-                                    <li>Click <strong>Generate</strong></li>
-                                    <li>Copy the 16-character password (remove spaces)</li>
-                                </ol>
-                                
-                                <h4>Step 3: Configure Above</h4>
-                                <ul class="setup-steps">
-                                    <li><strong>SMTP Host:</strong> smtp.gmail.com</li>
-                                    <li><strong>SMTP Port:</strong> 587</li>
-                                    <li><strong>Email:</strong> your-email@gmail.com</li>
-                                    <li><strong>Password:</strong> Paste the 16-character App Password</li>
-                                </ul>
-                                
-                                <h4>Step 4: Test</h4>
-                                <p>Click "Save & Test Email" to verify your configuration. You should receive a test email within seconds.</p>
-                                
-                                <div class="guide-note">
-                                    <strong>✅ Free Forever:</strong> Gmail allows 500 emails/day for free (no credit card needed)
-                                </div>
-                            </div>
-                        </details>
-                        
-                        <!-- Alternative SMTP Providers -->
-                        <details class="admin-guide">
-                            <summary><strong>🔄 Other SMTP Providers</strong></summary>
-                            <div class="guide-content">
-                                <h4>Sendinblue (Brevo)</h4>
-                                <ul class="setup-steps">
-                                    <li><strong>Host:</strong> smtp-relay.sendinblue.com</li>
-                                    <li><strong>Port:</strong> 587</li>
-                                    <li><strong>Free tier:</strong> 300 emails/day</li>
-                                    <li><a href="https://www.sendinblue.com/" target="_blank">Sign up here</a></li>
-                                </ul>
-                                
-                                <h4>Outlook/Hotmail</h4>
-                                <ul class="setup-steps">
-                                    <li><strong>Host:</strong> smtp-mail.outlook.com</li>
-                                    <li><strong>Port:</strong> 587</li>
-                                    <li><strong>Free tier:</strong> Personal use</li>
-                                </ul>
-                            </div>
-                        </details>
-                    </div>
-                </div>
-                
                 <!-- Power User Unlock Section -->
                 <div id="power-user-lock" class="power-user-unlock" style="display: none;">
                     <h3>🔒 Email Notifications (Power Users Only)</h3>
@@ -364,211 +246,364 @@
                     <p>Email notifications are enabled for your account</p>
                 </div>
                 
-                <!-- Regular User Email Settings (Simplified) -->
-                <div class="settings-card" id="user-email-settings">
-                    <h3>📧 Email Notifications</h3>
-                    
-                    <!-- Show system status -->
-                    <div class="email-system-status" id="email-system-status">
-                        <p class="system-status-message">Loading email system status...</p>
+                <!-- 1. EMAIL NOTIFICATIONS SECTION (Top) -->
+                <div class="collapsible-section">
+                    <div class="section-header" onclick="toggleSection('email-notifications-content')">
+                        <h3>
+                            <span class="toggle-icon">▼</span>
+                            📧 Email Notifications
+                        </h3>
                     </div>
-                    
-                    <div id="user-notification-settings" style="display: none;">
-                        <p class="settings-description">Receive email reminders throughout the day</p>
-                        
-                        <div class="setting-item">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="email-notifications-enabled" />
-                                <span>Enable email reminders for me</span>
-                            </label>
-                        </div>
-                        
-                        <div id="notification-settings" class="notification-settings" style="display: none;">
-                            <div class="setting-item">
-                                <label class="setting-label">Reminder Times (Up to 5 Custom Reminders)</label>
+                    <div id="email-notifications-content" class="section-content">
+                        <!-- Regular User Email Settings (Simplified) -->
+                        <div class="settings-card" id="user-email-settings">
+                            
+                            <!-- Show system status -->
+                            <div class="email-system-status" id="email-system-status">
+                                <p class="system-status-message">Loading email system status...</p>
+                            </div>
+                            
+                            <div id="user-notification-settings" style="display: none;">
+                                <p class="settings-description">Receive email reminders throughout the day</p>
                                 
-                                <!-- Reminder Slot 1 -->
-                                <div class="reminder-slot" id="reminder-slot-1">
-                                    <div class="reminder-header">
-                                        <h4>Reminder 1</h4>
-                                        <div class="reminder-enable">
-                                            <input type="checkbox" id="reminder-1-enabled" checked>
-                                            <label for="reminder-1-enabled">Enabled</label>
-                                        </div>
-                                    </div>
-                                    <div class="reminder-time-options">
-                                        <label>Time:</label>
-                                        <select id="reminder-1-preset" class="time-preset-select">
-                                            <option value="">-- Select Preset --</option>
-                                            <option value="07:00">7:00 AM</option>
-                                            <option value="09:00" selected>9:00 AM</option>
-                                            <option value="11:00">11:00 AM</option>
-                                            <option value="12:00">12:00 PM</option>
-                                            <option value="14:00">2:00 PM</option>
-                                            <option value="15:00">3:00 PM</option>
-                                            <option value="17:00">5:00 PM</option>
-                                            <option value="19:00">7:00 PM</option>
-                                            <option value="21:00">9:00 PM</option>
-                                            <option value="custom">Custom Time</option>
-                                        </select>
-                                        <span class="time-divider">or</span>
-                                        <input type="time" id="reminder-1-custom" class="custom-time-input" disabled />
-                                    </div>
+                                <div class="setting-item">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" id="email-notifications-enabled" />
+                                        <span>Enable email reminders for me</span>
+                                    </label>
                                 </div>
+                                
+                                <div id="notification-settings" class="notification-settings" style="display: none;">
+                                    <div class="setting-item">
+                                        <label class="setting-label">Reminder Times (Up to 5 Custom Reminders)</label>
+                                        
+                                        <!-- Reminder Slot 1 -->
+                                        <div class="reminder-slot" id="reminder-slot-1">
+                                            <div class="reminder-header">
+                                                <h4>Reminder 1</h4>
+                                                <div class="reminder-enable">
+                                                    <input type="checkbox" id="reminder-1-enabled" checked>
+                                                    <label for="reminder-1-enabled">Enabled</label>
+                                                </div>
+                                            </div>
+                                            <div class="reminder-time-options">
+                                                <label>Time:</label>
+                                                <select id="reminder-1-preset" class="time-preset-select">
+                                                    <option value="">-- Select Preset --</option>
+                                                    <option value="07:00">7:00 AM</option>
+                                                    <option value="09:00" selected>9:00 AM</option>
+                                                    <option value="11:00">11:00 AM</option>
+                                                    <option value="12:00">12:00 PM</option>
+                                                    <option value="14:00">2:00 PM</option>
+                                                    <option value="15:00">3:00 PM</option>
+                                                    <option value="17:00">5:00 PM</option>
+                                                    <option value="19:00">7:00 PM</option>
+                                                    <option value="21:00">9:00 PM</option>
+                                                    <option value="custom">Custom Time</option>
+                                                </select>
+                                                <span class="time-divider">or</span>
+                                                <input type="time" id="reminder-1-custom" class="custom-time-input" disabled />
+                                            </div>
+                                        </div>
 
-                                <!-- Reminder Slots 2-5 (similar structure) -->
-                                <div class="reminder-slot" id="reminder-slot-2">
-                                    <div class="reminder-header">
-                                        <h4>Reminder 2</h4>
-                                        <div class="reminder-enable">
-                                            <input type="checkbox" id="reminder-2-enabled" checked>
-                                            <label for="reminder-2-enabled">Enabled</label>
+                                        <!-- Reminder Slot 2 -->
+                                        <div class="reminder-slot" id="reminder-slot-2">
+                                            <div class="reminder-header">
+                                                <h4>Reminder 2</h4>
+                                                <div class="reminder-enable">
+                                                    <input type="checkbox" id="reminder-2-enabled" checked>
+                                                    <label for="reminder-2-enabled">Enabled</label>
+                                                </div>
+                                            </div>
+                                            <div class="reminder-time-options">
+                                                <label>Time:</label>
+                                                <select id="reminder-2-preset" class="time-preset-select">
+                                                    <option value="">-- Select Preset --</option>
+                                                    <option value="07:00">7:00 AM</option>
+                                                    <option value="09:00">9:00 AM</option>
+                                                    <option value="11:00">11:00 AM</option>
+                                                    <option value="12:00">12:00 PM</option>
+                                                    <option value="14:00">2:00 PM</option>
+                                                    <option value="15:00" selected>3:00 PM</option>
+                                                    <option value="17:00">5:00 PM</option>
+                                                    <option value="19:00">7:00 PM</option>
+                                                    <option value="21:00">9:00 PM</option>
+                                                    <option value="custom">Custom Time</option>
+                                                </select>
+                                                <span class="time-divider">or</span>
+                                                <input type="time" id="reminder-2-custom" class="custom-time-input" disabled />
+                                            </div>
+                                        </div>
+
+                                        <!-- Reminder Slot 3 -->
+                                        <div class="reminder-slot" id="reminder-slot-3">
+                                            <div class="reminder-header">
+                                                <h4>Reminder 3</h4>
+                                                <div class="reminder-enable">
+                                                    <input type="checkbox" id="reminder-3-enabled" checked>
+                                                    <label for="reminder-3-enabled">Enabled</label>
+                                                </div>
+                                            </div>
+                                            <div class="reminder-time-options">
+                                                <label>Time:</label>
+                                                <select id="reminder-3-preset" class="time-preset-select">
+                                                    <option value="">-- Select Preset --</option>
+                                                    <option value="07:00">7:00 AM</option>
+                                                    <option value="09:00">9:00 AM</option>
+                                                    <option value="11:00">11:00 AM</option>
+                                                    <option value="12:00">12:00 PM</option>
+                                                    <option value="14:00">2:00 PM</option>
+                                                    <option value="15:00">3:00 PM</option>
+                                                    <option value="17:00">5:00 PM</option>
+                                                    <option value="19:00" selected>7:00 PM</option>
+                                                    <option value="21:00">9:00 PM</option>
+                                                    <option value="custom">Custom Time</option>
+                                                </select>
+                                                <span class="time-divider">or</span>
+                                                <input type="time" id="reminder-3-custom" class="custom-time-input" disabled />
+                                            </div>
+                                        </div>
+
+                                        <!-- Reminder Slot 4 -->
+                                        <div class="reminder-slot disabled" id="reminder-slot-4">
+                                            <div class="reminder-header">
+                                                <h4>Reminder 4</h4>
+                                                <div class="reminder-enable">
+                                                    <input type="checkbox" id="reminder-4-enabled">
+                                                    <label for="reminder-4-enabled">Enabled</label>
+                                                </div>
+                                            </div>
+                                            <div class="reminder-time-options">
+                                                <label>Time:</label>
+                                                <select id="reminder-4-preset" class="time-preset-select" disabled>
+                                                    <option value="">-- Select Preset --</option>
+                                                    <option value="07:00">7:00 AM</option>
+                                                    <option value="09:00">9:00 AM</option>
+                                                    <option value="11:00">11:00 AM</option>
+                                                    <option value="12:00" selected>12:00 PM</option>
+                                                    <option value="14:00">2:00 PM</option>
+                                                    <option value="15:00">3:00 PM</option>
+                                                    <option value="17:00">5:00 PM</option>
+                                                    <option value="19:00">7:00 PM</option>
+                                                    <option value="21:00">9:00 PM</option>
+                                                    <option value="custom">Custom Time</option>
+                                                </select>
+                                                <span class="time-divider">or</span>
+                                                <input type="time" id="reminder-4-custom" class="custom-time-input" disabled />
+                                            </div>
+                                        </div>
+
+                                        <!-- Reminder Slot 5 -->
+                                        <div class="reminder-slot disabled" id="reminder-slot-5">
+                                            <div class="reminder-header">
+                                                <h4>Reminder 5</h4>
+                                                <div class="reminder-enable">
+                                                    <input type="checkbox" id="reminder-5-enabled">
+                                                    <label for="reminder-5-enabled">Enabled</label>
+                                                </div>
+                                            </div>
+                                            <div class="reminder-time-options">
+                                                <label>Time:</label>
+                                                <select id="reminder-5-preset" class="time-preset-select" disabled>
+                                                    <option value="">-- Select Preset --</option>
+                                                    <option value="07:00">7:00 AM</option>
+                                                    <option value="09:00">9:00 AM</option>
+                                                    <option value="11:00">11:00 AM</option>
+                                                    <option value="12:00">12:00 PM</option>
+                                                    <option value="14:00">2:00 PM</option>
+                                                    <option value="15:00">3:00 PM</option>
+                                                    <option value="17:00">5:00 PM</option>
+                                                    <option value="19:00">7:00 PM</option>
+                                                    <option value="21:00" selected>9:00 PM</option>
+                                                    <option value="custom">Custom Time</option>
+                                                </select>
+                                                <span class="time-divider">or</span>
+                                                <input type="time" id="reminder-5-custom" class="custom-time-input" disabled />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="reminder-time-options">
-                                        <label>Time:</label>
-                                        <select id="reminder-2-preset" class="time-preset-select">
-                                            <option value="">-- Select Preset --</option>
-                                            <option value="07:00">7:00 AM</option>
-                                            <option value="09:00">9:00 AM</option>
-                                            <option value="11:00">11:00 AM</option>
-                                            <option value="12:00">12:00 PM</option>
-                                            <option value="14:00">2:00 PM</option>
-                                            <option value="15:00" selected>3:00 PM</option>
-                                            <option value="17:00">5:00 PM</option>
-                                            <option value="19:00">7:00 PM</option>
-                                            <option value="21:00">9:00 PM</option>
-                                            <option value="custom">Custom Time</option>
+
+                                    <div class="setting-item">
+                                        <label for="user-timezone" class="setting-label">Your Timezone</label>
+                                        <select id="user-timezone" class="timezone-select">
+                                            <!-- Will be populated by JavaScript -->
                                         </select>
-                                        <span class="time-divider">or</span>
-                                        <input type="time" id="reminder-2-custom" class="custom-time-input" disabled />
                                     </div>
+
+                                    <button id="save-settings-btn" class="btn-primary">💾 Save Settings</button>
                                 </div>
-
-                                <div class="reminder-slot" id="reminder-slot-3">
-                                    <div class="reminder-header">
-                                        <h4>Reminder 3</h4>
-                                        <div class="reminder-enable">
-                                            <input type="checkbox" id="reminder-3-enabled" checked>
-                                            <label for="reminder-3-enabled">Enabled</label>
-                                        </div>
+                                
+                                <!-- Test Email Section -->
+                                <div class="settings-group" style="margin-top: 30px;">
+                                    <h4>🧪 Test Email Delivery</h4>
+                                    <p class="settings-description">Send a test reminder email to verify your setup is working correctly</p>
+                                    
+                                    <div class="test-email-info">
+                                        <p>Test email will be sent to: <strong id="test-email-address"></strong></p>
+                                        <p class="test-note">The email will show your current progress and include a link to the website.</p>
                                     </div>
-                                    <div class="reminder-time-options">
-                                        <label>Time:</label>
-                                        <select id="reminder-3-preset" class="time-preset-select">
-                                            <option value="">-- Select Preset --</option>
-                                            <option value="07:00">7:00 AM</option>
-                                            <option value="09:00">9:00 AM</option>
-                                            <option value="11:00">11:00 AM</option>
-                                            <option value="12:00">12:00 PM</option>
-                                            <option value="14:00">2:00 PM</option>
-                                            <option value="15:00">3:00 PM</option>
-                                            <option value="17:00">5:00 PM</option>
-                                            <option value="19:00" selected>7:00 PM</option>
-                                            <option value="21:00">9:00 PM</option>
-                                            <option value="custom">Custom Time</option>
-                                        </select>
-                                        <span class="time-divider">or</span>
-                                        <input type="time" id="reminder-3-custom" class="custom-time-input" disabled />
-                                    </div>
-                                </div>
-
-                                <div class="reminder-slot disabled" id="reminder-slot-4">
-                                    <div class="reminder-header">
-                                        <h4>Reminder 4</h4>
-                                        <div class="reminder-enable">
-                                            <input type="checkbox" id="reminder-4-enabled">
-                                            <label for="reminder-4-enabled">Enabled</label>
-                                        </div>
-                                    </div>
-                                    <div class="reminder-time-options">
-                                        <label>Time:</label>
-                                        <select id="reminder-4-preset" class="time-preset-select" disabled>
-                                            <option value="">-- Select Preset --</option>
-                                            <option value="07:00">7:00 AM</option>
-                                            <option value="09:00">9:00 AM</option>
-                                            <option value="11:00">11:00 AM</option>
-                                            <option value="12:00" selected>12:00 PM</option>
-                                            <option value="14:00">2:00 PM</option>
-                                            <option value="15:00">3:00 PM</option>
-                                            <option value="17:00">5:00 PM</option>
-                                            <option value="19:00">7:00 PM</option>
-                                            <option value="21:00">9:00 PM</option>
-                                            <option value="custom">Custom Time</option>
-                                        </select>
-                                        <span class="time-divider">or</span>
-                                        <input type="time" id="reminder-4-custom" class="custom-time-input" disabled />
-                                    </div>
-                                </div>
-
-                                <div class="reminder-slot disabled" id="reminder-slot-5">
-                                    <div class="reminder-header">
-                                        <h4>Reminder 5</h4>
-                                        <div class="reminder-enable">
-                                            <input type="checkbox" id="reminder-5-enabled">
-                                            <label for="reminder-5-enabled">Enabled</label>
-                                        </div>
-                                    </div>
-                                    <div class="reminder-time-options">
-                                        <label>Time:</label>
-                                        <select id="reminder-5-preset" class="time-preset-select" disabled>
-                                            <option value="">-- Select Preset --</option>
-                                            <option value="07:00">7:00 AM</option>
-                                            <option value="09:00">9:00 AM</option>
-                                            <option value="11:00">11:00 AM</option>
-                                            <option value="12:00">12:00 PM</option>
-                                            <option value="14:00">2:00 PM</option>
-                                            <option value="15:00">3:00 PM</option>
-                                            <option value="17:00">5:00 PM</option>
-                                            <option value="19:00">7:00 PM</option>
-                                            <option value="21:00" selected>9:00 PM</option>
-                                            <option value="custom">Custom Time</option>
-                                        </select>
-                                        <span class="time-divider">or</span>
-                                        <input type="time" id="reminder-5-custom" class="custom-time-input" disabled />
-                                    </div>
+                                    
+                                    <button id="send-test-email-btn" class="btn-secondary">
+                                        📨 Send Test Email Now
+                                    </button>
+                                    <div class="test-message" id="test-message"></div>
                                 </div>
                             </div>
-
-                            <div class="setting-item">
-                                <label for="user-timezone" class="setting-label">Your Timezone</label>
-                                <select id="user-timezone" class="timezone-select">
-                                    <!-- Will be populated by JavaScript -->
-                                </select>
-                            </div>
-
-                            <button id="save-settings-btn" class="btn-primary">💾 Save Settings</button>
-                        </div>
-                        
-                        <!-- Test Email Section -->
-                        <div class="settings-group" style="margin-top: 30px;">
-                            <h4>🧪 Test Email Delivery</h4>
-                            <p class="settings-description">Send a test reminder email to verify your setup is working correctly</p>
-                            
-                            <div class="test-email-info">
-                                <p>Test email will be sent to: <strong id="test-email-address"></strong></p>
-                                <p class="test-note">The email will show your current progress and include a link to the website.</p>
-                            </div>
-                            
-                            <button id="send-test-email-btn" class="btn-secondary">
-                                📨 Send Test Email Now
-                            </button>
-                            <div class="test-message" id="test-message"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="settings-card">
-                    <h3>👤 Account Settings</h3>
-                    <div class="setting-item">
-                        <label class="setting-label">Email Address</label>
-                        <p class="user-email-display" id="settings-user-email"></p>
+                <!-- 2. ACCOUNT SETTINGS SECTION (Middle) -->
+                <div class="collapsible-section">
+                    <div class="section-header" onclick="toggleSection('account-settings-content')">
+                        <h3>
+                            <span class="toggle-icon">▼</span>
+                            👤 Account Settings
+                        </h3>
                     </div>
-                    <div class="setting-item">
-                        <label for="daily-goal-setting" class="setting-label">Default Daily Goal (ml)</label>
-                        <input type="number" id="daily-goal-setting" class="goal-input" value="2000" min="500" max="10000" step="100">
+                    <div id="account-settings-content" class="section-content">
+                        <div class="settings-card">
+                            <div class="setting-item">
+                                <label class="setting-label">Email Address</label>
+                                <p class="user-email-display" id="settings-user-email"></p>
+                            </div>
+                            <div class="setting-item">
+                                <label for="daily-goal-setting" class="setting-label">Default Daily Goal (ml)</label>
+                                <input type="number" id="daily-goal-setting" class="goal-input" value="2000" min="500" max="10000" step="100">
+                            </div>
+                            <button id="save-account-settings-btn" class="btn-primary">💾 Save Account Settings</button>
+                        </div>
                     </div>
-                    <button id="save-account-settings-btn" class="btn-primary">💾 Save Account Settings</button>
+                </div>
+                
+                <!-- 3. ADMINISTRATOR CONTROLS SECTION (Bottom) -->
+                <div class="admin-section" id="admin-section" style="display: none;">
+                <!-- 3. ADMINISTRATOR CONTROLS SECTION (Bottom) -->
+                <div class="admin-section" id="admin-section" style="display: none;">
+                    <div class="collapsible-section">
+                        <div class="section-header" onclick="toggleSection('admin-section-content')">
+                            <h3>
+                                <span class="toggle-icon">▼</span>
+                                ⚙️ Administrator Controls
+                            </h3>
+                        </div>
+                        <div id="admin-section-content" class="section-content">
+                            <div class="admin-badge">👨‍💼 Administrator Controls</div>
+                            
+                            <div class="settings-card admin-card">
+                                <h3>📧 Email SMTP Configuration (Admin Only)</h3>
+                                <p class="admin-description">Configure SMTP settings once for all users. Uses Gmail SMTP or any other SMTP provider. Regular users will only need to enable notifications and set reminder times.</p>
+                                
+                                <div class="smtp-config">
+                                    <div class="config-field">
+                                        <label for="admin-smtp-host">SMTP Host:</label>
+                                        <input type="text" id="admin-smtp-host" class="config-input" placeholder="smtp.gmail.com" />
+                                        <small class="field-hint">For Gmail: smtp.gmail.com</small>
+                                    </div>
+                                    
+                                    <div class="config-field">
+                                        <label for="admin-smtp-port">SMTP Port:</label>
+                                        <input type="number" id="admin-smtp-port" class="config-input" placeholder="587" value="587" />
+                                        <small class="field-hint">Common ports: 587 (TLS), 465 (SSL), 25</small>
+                                    </div>
+                                    
+                                    <div class="config-field">
+                                        <label for="admin-sender-email">Sender Email Address:</label>
+                                        <input type="email" id="admin-sender-email" class="config-input" placeholder="your-email@gmail.com" />
+                                        <small class="field-hint">The email address that will send notifications</small>
+                                    </div>
+                                    
+                                    <div class="config-field">
+                                        <label for="admin-sender-password">Email Password / App Password:</label>
+                                        <input type="password" id="admin-sender-password" class="config-input" placeholder="••••••••••••••••" />
+                                        <small class="field-hint">⚠️ For Gmail, use an <a href="https://myaccount.google.com/apppasswords" target="_blank">App Password</a>, not your regular password</small>
+                                    </div>
+                                    
+                                    <div class="config-field">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" id="admin-smtp-enabled" />
+                                            <span>Enable email system for all users</span>
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="admin-actions">
+                                        <button id="save-admin-smtp-btn" class="btn-primary">💾 Save Configuration</button>
+                                        <button id="test-admin-smtp-btn" class="btn-secondary">🧪 Save & Test Email</button>
+                                    </div>
+                                    <div class="admin-config-message" id="admin-config-message"></div>
+                                </div>
+                                
+                                <div class="admin-status" id="admin-status">
+                                    <h4>Current Configuration Status:</h4>
+                                    <div class="status-info" id="status-info">
+                                        <p>Status: <span id="config-status">Not configured</span></p>
+                                        <p>SMTP Host: <span id="config-smtp-host">-</span></p>
+                                        <p>Sender Email: <span id="config-sender-email">-</span></p>
+                                        <p>Configured by: <span id="config-admin">-</span></p>
+                                        <p>Last updated: <span id="config-updated">-</span></p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Gmail SMTP Setup Guide -->
+                                <details class="admin-guide">
+                                    <summary><strong>📖 Gmail SMTP Setup Guide (5 minutes)</strong></summary>
+                                    <div class="guide-content">
+                                        <h4>Step 1: Enable 2-Step Verification</h4>
+                                        <ol class="setup-steps">
+                                            <li>Visit <a href="https://myaccount.google.com/security" target="_blank">Google Account Security</a></li>
+                                            <li>Find "2-Step Verification" and enable it</li>
+                                            <li>Complete the verification process</li>
+                                        </ol>
+                                        
+                                        <h4>Step 2: Generate App Password</h4>
+                                        <ol class="setup-steps">
+                                            <li>Go to <a href="https://myaccount.google.com/apppasswords" target="_blank">App Passwords</a></li>
+                                            <li>Select app: <strong>Mail</strong></li>
+                                            <li>Select device: <strong>Other</strong> (name it "Water Tracker")</li>
+                                            <li>Click <strong>Generate</strong></li>
+                                            <li>Copy the 16-character password (remove spaces)</li>
+                                        </ol>
+                                        
+                                        <h4>Step 3: Configure Above</h4>
+                                        <ul class="setup-steps">
+                                            <li><strong>SMTP Host:</strong> smtp.gmail.com</li>
+                                            <li><strong>SMTP Port:</strong> 587</li>
+                                            <li><strong>Email:</strong> your-email@gmail.com</li>
+                                            <li><strong>Password:</strong> Paste the 16-character App Password</li>
+                                        </ul>
+                                        
+                                        <h4>Step 4: Test</h4>
+                                        <p>Click "Save & Test Email" to verify your configuration. You should receive a test email within seconds.</p>
+                                        
+                                        <div class="guide-note">
+                                            <strong>✅ Free Forever:</strong> Gmail allows 500 emails/day for free (no credit card needed)
+                                        </div>
+                                    </div>
+                                </details>
+                                
+                                <!-- Alternative SMTP Providers -->
+                                <details class="admin-guide">
+                                    <summary><strong>🔄 Other SMTP Providers</strong></summary>
+                                    <div class="guide-content">
+                                        <h4>Sendinblue (Brevo)</h4>
+                                        <ul class="setup-steps">
+                                            <li><strong>Host:</strong> smtp-relay.sendinblue.com</li>
+                                            <li><strong>Port:</strong> 587</li>
+                                            <li><strong>Free tier:</strong> 300 emails/day</li>
+                                            <li><a href="https://www.sendinblue.com/" target="_blank">Sign up here</a></li>
+                                        </ul>
+                                        
+                                        <h4>Outlook/Hotmail</h4>
+                                        <ul class="setup-steps">
+                                            <li><strong>Host:</strong> smtp-mail.outlook.com</li>
+                                            <li><strong>Port:</strong> 587</li>
+                                            <li><strong>Free tier:</strong> Personal use</li>
+                                        </ul>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>

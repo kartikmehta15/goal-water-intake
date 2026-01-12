@@ -1683,7 +1683,53 @@ class WaterIntakeTracker {
     }
 }
 
+// Collapsible Section Functionality
+function toggleSection(sectionId) {
+    const section = document.getElementById(sectionId);
+    const header = section.previousElementSibling;
+    const icon = header.querySelector('.toggle-icon');
+    
+    if (section.classList.contains('collapsed')) {
+        // Expand
+        section.classList.remove('collapsed');
+        icon.textContent = '▼';
+        localStorage.setItem(`section_${sectionId}`, 'expanded');
+    } else {
+        // Collapse
+        section.classList.add('collapsed');
+        icon.textContent = '▶';
+        localStorage.setItem(`section_${sectionId}`, 'collapsed');
+    }
+}
+
+// Initialize collapsible sections on page load
+function initializeCollapsibleSections() {
+    const sections = [
+        'email-notifications-content',
+        'account-settings-content',
+        'admin-section-content'
+    ];
+    
+    sections.forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        
+        const state = localStorage.getItem(`section_${sectionId}`) || 'expanded';
+        const header = section.previousElementSibling;
+        const icon = header.querySelector('.toggle-icon');
+        
+        if (state === 'collapsed') {
+            section.classList.add('collapsed');
+            if (icon) icon.textContent = '▶';
+        } else {
+            section.classList.remove('collapsed');
+            if (icon) icon.textContent = '▼';
+        }
+    });
+}
+
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     new WaterIntakeTracker();
+    initializeCollapsibleSections();
 });
