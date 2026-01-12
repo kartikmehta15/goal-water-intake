@@ -55,7 +55,7 @@ NODE_ENV=development
 FRONTEND_URL=http://localhost:8080
 
 # Admin Configuration
-ADMIN_EMAIL=kartikmehta15@gmail.com
+ADMIN_EMAIL=kartikmehta.iitd@gmail.com
 ```
 
 ### 3. Get Firebase Admin SDK Credentials
@@ -275,7 +275,7 @@ FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.c
 PORT=3000
 NODE_ENV=production
 FRONTEND_URL=https://your-frontend-url.com
-ADMIN_EMAIL=kartikmehta15@gmail.com
+ADMIN_EMAIL=kartikmehta.iitd@gmail.com
 ```
 
 ## Updating Frontend

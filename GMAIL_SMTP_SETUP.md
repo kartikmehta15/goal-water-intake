@@ -86,7 +86,7 @@ Wait for deployment to complete. You should see:
 ✔  Deploy complete!
 ```
 
-**Note:** If you want to change the admin email from the default (`kartikmehta15@gmail.com`), update:
+**Note:** If you want to change the admin email from the default (`kartikmehta.iitd@gmail.com`), update:
 - `ADMIN_EMAIL` constant in `script.js` (line 7)
 - `ADMIN_EMAIL` constant in `functions/index.js` (line 10)
 
@@ -97,7 +97,7 @@ Make sure both files have the **same email address**!
 ## Step 3: Configure SMTP via Admin Panel (2 minutes)
 
 1. **Open your Water Tracker website**
-2. **Log in as admin** (default: `kartikmehta15@gmail.com` - change if you modified the constants)
+2. **Log in as admin** (default: `kartikmehta.iitd@gmail.com` - change if you modified the constants)
 3. **Go to Settings tab**
 4. **You should see "Administrator Controls" section** at the top
 
