@@ -324,6 +324,16 @@ Works on all modern browsers that support:
 - Changes made offline will sync when you're back online
 - You'll see an offline indicator at the bottom of the screen
 
+### Email Notifications Not Loading
+If the Email Notifications section shows "Loading email system status..." indefinitely:
+- Check that Firestore security rules are deployed with the correct admin email
+- Run: `firebase deploy --only firestore:rules`
+- Verify the `isAdmin()` function in `firestore.rules` has the correct email
+- Sign in with the admin email specified in the rules
+- Check browser console for "Missing or insufficient permissions" errors
+
+**Note**: Firestore rules are stored server-side and must be explicitly deployed. Git commits alone won't update the rules in Firebase Console.
+
 ## Files
 
 ### Frontend
